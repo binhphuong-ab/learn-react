@@ -186,6 +186,85 @@ function turnOnLight() {
 }
 ```
 
+To understand the difference, think of a function like a **Calculator** (Returner), a **Commander** (Doer), or a **Cashier** (Both).
+
+Here are the three types of arrow functions broken down by their behavior and syntax.
+
+---
+
+### **1. Returner Only (The "Calculator")**
+
+These functions are pure logic. They take an input, process it, and hand back a result immediately. They do not change anything in the outside world.
+
+```javascript
+const double = (n) => n * 2;
+```
+
+| Category | Component | Description |
+| --- | --- | --- |
+| **Action** | `n * 2` | **Implicit Return:** The result is sent back automatically because there are no `{}`. |
+| **Input** | `n` | **Data Type:** `Number`. |
+| **Output** | `n * 2` | **Data Type:** `Number`. |
+| **Behavior** | **Pure Calculation:** If you call this 100 times, nothing in your app changes; you just get numbers back. |  |
+
+---
+
+### **2. Doer Only (The "Commander")**
+
+These functions perform an action but return "nothing" (`undefined`). They are used for side effects like logging, alerts, or updating global variables.
+
+```javascript
+const logSuccess = (userName) => {
+  console.log("Access granted for: " + userName);
+  alert("Welcome back!");
+};
+```
+
+| Category | Component | Description |
+| --- | --- | --- |
+| **Action** | `console.log`, `alert` | **Side Effects:** Tasks performed in the browser/console. |
+| **Input** | `userName` | **Data Type:** `String`. |
+| **Output** | `undefined` | **Data Type:** `Undefined`. The function finishes and "dies" without giving data back. |
+| **Behavior** | **Task Execution:** This changes the UI (shows an alert) but cannot be used to set a variable value. |  |
+
+---
+
+### **3. Both: Returner & Doer (The "Cashier")**
+
+These functions perform a task (like logging or saving) **and** give you a result back. This is common when you want to confirm an action was successful or see the "before and after" of data.
+
+```javascript
+const updateAndNotify = (price, tax) => {
+  const total = price + tax;          // 1. Math (Internal Variable)
+  console.log("Total is: " + total);  // 2. Doer (Action)
+  return total;                       // 3. Returner (Output)
+};
+```
+
+| Category | Component | Description |
+| --- | --- | --- |
+| **Action** | `total = p + t` | **Calculation:** Preparing the data. |
+| **Action** | `console.log` | **Action:** Notifying the developer. |
+| **Input** | `price`, `tax` | **Data Type:** `Number`, `Number`. |
+| **Output** | `total` | **Data Type:** `Number`. The final result sent back to the caller. |
+| **Behavior** | **Hybrid:** It changes the outside world (log) and provides a value to be stored in state or another variable. |  |
+
+---
+
+### **Summary Table**
+
+| Type | Syntax Hint | Analogy | Resulting Value |
+| --- | --- | --- | --- |
+| **Returner Only** | No `{}` or `return` keyword | A **Thermometer** (tells you the temp). | The calculation result. |
+| **Doer Only** | Uses `{}` but no `return` | A **Doorbell** (makes a sound). | `undefined` |
+| **Both** | Uses `{}` AND `return` | A **ATM** (gives cash AND prints a receipt). | The returned value. |
+
+---
+
+### **Natural Language Summary**
+
+"You choose your arrow function style based on the goal: use the shorthand 'Returner' for quick math, the bracketed 'Doer' for triggering actions, and the full 'Hybrid' version when you need to perform a task and get an answer back at the same time."
+
 #### 2.2. Bản chất
 
 Component hiện đại là một **Hàm (Function)** bắt buộc có tên bắt đầu bằng **chữ cái in hoa** (ví dụ: `UserCard`).
@@ -370,6 +449,416 @@ const [state, setState] = useState(initialValue);
         
     - React cập nhật số `1` lên màn hình.
         
+
+**Ví dụ code minh họa:**
+
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  // useState creates a "memory slot" for this component
+  // Initial value: 0
+  const [count, setCount] = useState(0);
+
+  function handleClick() {
+    // This tells React: "Hey, the data changed! Please re-render!"
+    setCount(count + 1);
+  }
+
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={handleClick}>
+        Click me!
+      </button>
+    </div>
+  );
+}
+
+export default Counter;
+```
+
+**Điều gì xảy ra khi bạn click nút 3 lần?**
+
+| Lần click | Giá trị `count` | Hành động của React |
+|---|---|---|
+| **Lần đầu (Mount)** | `0` | Render lần đầu, hiển thị "Count: 0" |
+| **Click 1** | `0 → 1` | `setCount(1)` được gọi → React so sánh → Re-render → Hiển thị "Count: 1" |
+| **Click 2** | `1 → 2` | `setCount(2)` được gọi → React so sánh → Re-render → Hiển thị "Count: 2" |
+| **Click 3** | `2 → 3` | `setCount(3)` được gọi → React so sánh → Re-render → Hiển thị "Count: 3" |
+
+**Điểm quan trọng:**
+
+**Về Event Handler:**
+- `handleClick() {}` là **Wrapper Function** (Outer Function), đóng vai trò là **Event Handler**.
+- Khi user click, trình duyệt gọi Wrapper Function này, và bên trong nó mới gọi `setState()`/`setCount()`.
+
+**Về cơ chế Nhân - Quả (Cause & Effect):**
+
+> **NGUYÊN NHÂN:** Sự thay đổi của `A` (trong `setState(A)`) kích hoạt re-render.  
+> **KẾT QUẢ:** Biến `state` thay đổi chỉ sau khi re-render hoàn tất.
+
+**Lưu ý:** `A` có thể là:
+
+**1. Giá trị cụ thể** (Literal Value): `setState(5)`, `setState("Hello")`
+- React so sánh giá trị mới với giá trị cũ.
+- **Nếu khác nhau** → Re-render.
+- **Nếu giống nhau** → React bỏ qua, không re-render (tối ưu hóa).
+
+**Ví dụ minh họa:**
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(5)}>Set to 5</button>
+      <button onClick={() => setCount(10)}>Set to 10</button>
+    </div>
+  );
+}
+```
+
+**Kịch bản click:**
+
+| Hành động | Giá trị cũ | Giá trị mới (`A`) | So sánh | Kết quả |
+|---|---|---|---|---|
+| Click "Set to 5" lần 1 | `0` | `5` | `0 ≠ 5` | ✅ Re-render |
+| Click "Set to 5" lần 2 | `5` | `5` | `5 = 5` | ❌ Không re-render |
+| Click "Set to 5" lần 3 | `5` | `5` | `5 = 5` | ❌ Không re-render |
+| Click "Set to 10" | `5` | `10` | `5 ≠ 10` | ✅ Re-render |
+| Click "Set to 5" lần 4 | `10` | `5` | `10 ≠ 5` | ✅ Re-render (vì khác!) |
+
+**Kết luận:** Giá trị cụ thể **không phải** chỉ re-render 1 lần. Nó có thể re-render nhiều lần, miễn là giá trị mới **khác** với giá trị hiện tại.
+
+---
+
+**2. Biến** (Variable): `setState(newValue)`
+
+**Câu hỏi quan trọng:** Tôi có thể thay đổi biến `newValue` ở bên ngoài, sau đó gọi `setState(newValue)` để kích hoạt re-render không?
+
+**Trả lời:** **CÓ**, nhưng phụ thuộc vào **kiểu dữ liệu** của biến.
+
+React so sánh theo 2 cách khác nhau:
+
+**A. Kiểu nguyên thủy (Primitive Types):** Number, String, Boolean
+- React so sánh **GIÁ TRỊ** (Value Comparison).
+- Bạn có thể thay đổi biến bên ngoài và `setState(newValue)` sẽ hoạt động.
+
+**Ví dụ - Hoạt động tốt:**
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  function handleClick() {
+    let newValue = 10;        // Tạo biến bên ngoài
+    newValue = newValue + 5;  // Biến đổi biến
+    setCount(newValue);       // Gọi setState với biến đã thay đổi
+    // React so sánh: 0 ≠ 15 → Re-render ✅
+  }
+  
+  return <button onClick={handleClick}>Count: {count}</button>;
+}
+```
+
+**B. Kiểu tham chiếu (Reference Types):** Object, Array
+- React so sánh **ĐỊA CHỈ BỘ NHỚ** (Reference Comparison), không so sánh nội dung bên trong.
+- **Nếu bạn chỉ sửa nội dung** mà không tạo object/array mới → React **KHÔNG** phát hiện thay đổi.
+
+**Ví dụ - ❌ KHÔNG hoạt động:**
+
+```jsx
+function UserProfile() {
+  const [user, setUser] = useState({ name: "An", age: 25 });
+  
+  function handleClick() {
+    let newUser = user;      // newUser trỏ đến CÙNG địa chỉ với user
+    newUser.age = 30;        // Sửa nội dung (Mutation)
+    setUser(newUser);        // ❌ React so sánh địa chỉ: GIỐNG NHAU → Không re-render
+  }
+  
+  return <button onClick={handleClick}>Age: {user.age}</button>;
+}
+```
+
+**Ví dụ - ✅ Hoạt động (Tạo object mới):**
+
+```jsx
+function UserProfile() {
+  const [user, setUser] = useState({ name: "An", age: 25 });
+  
+  function handleClick() {
+    let newUser = { ...user };  // Tạo object MỚI (địa chỉ khác)
+    newUser.age = 30;           // Sửa nội dung
+    setUser(newUser);           // ✅ React so sánh địa chỉ: KHÁC NHAU → Re-render
+  }
+  
+  return <button onClick={handleClick}>Age: {user.age}</button>;
+}
+```
+
+**Bảng tóm tắt:**
+
+| Kiểu dữ liệu | Cách so sánh | Thay đổi biến bên ngoài | Kết quả |
+|---|---|---|---|
+| **Primitive** (Number, String, Boolean) | So sánh **giá trị** | `let x = 5; x = 10; setState(x)` | ✅ Hoạt động |
+| **Object/Array** (Mutation) | So sánh **địa chỉ** | `let obj = state; obj.x = 10; setState(obj)` | ❌ Không re-render |
+| **Object/Array** (New Reference) | So sánh **địa chỉ** | `let obj = {...state}; obj.x = 10; setState(obj)` | ✅ Hoạt động |
+
+**Kết luận:** Bạn có thể thay đổi biến bên ngoài, nhưng với Object/Array, bạn **PHẢI tạo bản sao mới** (new reference) thay vì sửa trực tiếp (mutation).
+
+**3. Hàm** (Function/Callback): `setState(prev => prev + 1)`
+
+---
+
+#### Kiến thức nền tảng: Callback Function là gì?
+
+Trước khi đi sâu vào `setState(prev => ...)`, hãy hiểu **Callback Function** - một khái niệm cốt lõi trong JavaScript.
+
+**Định nghĩa:**
+
+**Callback Function** là một hàm được bạn **truyền vào** một hàm khác như một tham số. Hàm nhận tham số đó sẽ thực thi (gọi lại - "call back") hàm của bạn tại một thời điểm nào đó.
+
+> *"Tôi giao cho bạn nhiệm vụ này. Khi nào làm xong thì **gọi lại** (callback) cho tôi nhé."*
+
+---
+
+#### Mô hình cơ bản: `functionA(functionB)`
+
+**Chính xác 100%!** Định nghĩa ngắn gọn nhất:
+
+> Bất cứ khi nào bạn truyền **tên** một hàm (`functionB`) vào bên trong ngoặc đơn của một hàm khác (`functionA`), thì `functionB` chính là **Callback Function**.
+
+Trong mô hình `functionA(functionB)`:
+
+1. **`functionB`**: Được gọi là **Callback Function** (Hàm được gọi lại). Nó đóng vai trò là "khách" hoặc "công cụ" được gửi đi.
+2. **`functionA`**: Trong kỹ thuật, người ta gọi nó là **Higher-Order Function** (Hàm bậc cao). Nó đóng vai trò là "chủ nhà" hoặc "người thực thi". Nó nhận `functionB` và sẽ quyết định *khi nào* thì kích hoạt `functionB`.
+
+#### Quy tắc "sống còn" để nhận diện Callback
+
+Để là một callback hợp lệ, khi truyền vào, bạn **KHÔNG ĐƯỢC** dùng dấu ngoặc tròn `()` sau tên hàm.
+
+* ✅ **ĐÚNG là Callback:**
+  ```javascript
+  functionA(functionB)
+  ```
+  *(Dịch: "Này A, cầm lấy cái bản thiết kế B này, lúc nào cần thì dùng nhé.")*
+
+* ❌ **SAI (Không phải Callback):**
+  ```javascript
+  functionA(functionB())
+  ```
+  *(Dịch: "Này A, tôi đã chạy xong hàm B rồi, tôi đưa cho ông cái kết quả (ví dụ số 10, hay chuỗi text) mà hàm B trả về nhé.")* 
+  
+  → Lúc này `functionA` nhận **kết quả** chứ không nhận **cái hàm**.
+
+#### Hình ảnh ẩn dụ: Nồi đa năng
+
+Bạn cứ nhớ hình ảnh này:
+
+* **Callback (`functionB`)**: Là cái **phương pháp** (Ví dụ: phương pháp "chiên", "xào", "luộc").
+* **Hàm chính (`functionA`)**: Là cái **nồi đa năng**.
+
+Bạn bỏ phương pháp "chiên" vào nồi → Nồi sẽ chiên.  
+Bạn bỏ phương pháp "luộc" vào nồi → Nồi sẽ luộc.
+
+---
+
+**Ví dụ đời sống: Đặt Pizza**
+
+1. **Hành động:** Bạn gọi điện đặt Pizza.
+2. **Vấn đề:** Pizza cần 20 phút để nướng. Bạn không muốn cầm điện thoại chờ im lặng suốt 20 phút (điều này sẽ làm "treo" bạn).
+3. **Giải pháp (Callback):** Bạn nói: *"Khi nào Pizza xong, hãy gọi vào số này cho tôi"* (số điện thoại = **Callback Function**).
+4. **Kết quả:** Bạn cúp máy và làm việc khác. Khi Pizza xong, nhân viên gọi lại số bạn đã đưa (thực thi Callback).
+
+**Tại sao cần Callback?**
+
+- **Xử lý bất đồng bộ (Asynchronous):** Máy tính không phải ngồi chờ một tác vụ nặng (tải file, gọi API, chờ user click) làm xong mới chạy tiếp. Chương trình không bị "đơ".
+- **Tái sử dụng code:** Viết hàm chung, cho phép tùy biến hành động cuối cùng bằng các callback khác nhau.
+
+**Phân loại Callback:**
+
+**A. Callback Đồng bộ (Synchronous)** - Thực thi ngay lập tức
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+
+// isEven là callback function
+function isEven(num) {
+  return num % 2 === 0;
+}
+
+// filter() nhận isEven làm tham số và gọi nó cho từng phần tử
+const evenNumbers = numbers.filter(isEven);
+console.log(evenNumbers); // [2, 4]
+```
+
+**B. Callback Bất đồng bộ (Asynchronous)** - Thực thi sau khi tác vụ hoàn thành
+
+```javascript
+console.log("1. Bắt đầu");
+
+// setTimeout nhận callback function làm tham số
+setTimeout(function() {
+  console.log("2. Xin chào sau 2 giây!");
+}, 2000);
+
+console.log("3. Kết thúc");
+
+/*
+Kết quả:
+1. Bắt đầu
+3. Kết thúc
+... (chờ 2 giây) ...
+2. Xin chào sau 2 giây!
+*/
+```
+
+**Lưu ý:** Dòng số 3 chạy trước dòng số 2 - đó chính là lợi ích của bất đồng bộ: không chặn code phía sau.
+
+---
+
+#### Callback trong React `setState()`
+
+Bây giờ áp dụng khái niệm callback vào React:
+
+**Callback function logic trong `setState()` là gì?**
+
+Thay vì truyền **giá trị cố định** vào `setState()`, bạn truyền một **hàm (callback function)**. React sẽ:
+1. Gọi hàm này
+2. Truyền vào tham số `prev` (giá trị state **mới nhất** từ hàng đợi cập nhật)
+3. Lấy giá trị mà hàm **return** làm state mới
+
+**Đặc điểm:** Callback trong `setState()` là **đồng bộ** (synchronous) - React gọi nó ngay lập tức trong quá trình xử lý hàng đợi cập nhật.
+
+**Cú pháp:**
+```jsx
+setState(prev => prev + 1)
+//       ↑      ↑
+//       |      └─ Giá trị return (state mới)
+//       └──────── Tham số (state hiện tại/mới nhất)
+```
+
+---
+
+**So sánh: Giá trị trực tiếp vs Callback Function**
+
+**Tình huống:** Bạn muốn tăng `count` lên 3 đơn vị khi click 1 lần.
+
+**❌ Cách 1: Truyền giá trị trực tiếp (Sai - Stale Closure)**
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  function handleClick() {
+    setCount(count + 1);  // count = 0 → Lên lịch cập nhật thành 1
+    setCount(count + 1);  // count VẪN = 0 → Lên lịch cập nhật thành 1
+    setCount(count + 1);  // count VẪN = 0 → Lên lịch cập nhật thành 1
+    // Kết quả: count chỉ tăng lên 1 (không phải 3!)
+  }
+  
+  return <button onClick={handleClick}>Count: {count}</button>;
+}
+```
+
+**Tại sao sai?**
+- Trong **cùng một lần render**, biến `count` bị "đóng băng" (closure) ở giá trị `0`.
+- Cả 3 lần gọi `setCount` đều đọc `count = 0`, nên cả 3 đều tính `0 + 1 = 1`.
+- React nhận 3 lệnh: "Cập nhật thành 1", "Cập nhật thành 1", "Cập nhật thành 1" → Kết quả cuối: `1`.
+
+---
+
+**✅ Cách 2: Truyền callback function (Đúng)**
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  function handleClick() {
+    setCount(prev => prev + 1);  // prev = 0 → return 1
+    setCount(prev => prev + 1);  // prev = 1 → return 2
+    setCount(prev => prev + 1);  // prev = 2 → return 3
+    // Kết quả: count tăng lên 3 ✅
+  }
+  
+  return <button onClick={handleClick}>Count: {count}</button>;
+}
+```
+
+**Tại sao đúng?**
+- React xử lý **tuần tự** các callback trong hàng đợi (queue).
+- Lần 1: `prev = 0` → return `1` → React lưu tạm `1`
+- Lần 2: `prev = 1` (giá trị mới nhất) → return `2` → React lưu tạm `2`
+- Lần 3: `prev = 2` → return `3` → React lưu tạm `3`
+- Sau đó mới re-render với `count = 3`.
+
+---
+
+**Timeline so sánh chi tiết:**
+
+| Thời điểm | Cách 1: `setCount(count + 1)` | Cách 2: `setCount(prev => prev + 1)` |
+|---|---|---|
+| **Trước click** | `count = 0` | `count = 0` |
+| **Lệnh 1** | Đọc `count = 0` → Lên lịch `1` | Callback nhận `prev = 0` → return `1` |
+| **Lệnh 2** | Đọc `count = 0` (vẫn cũ) → Lên lịch `1` | Callback nhận `prev = 1` → return `2` |
+| **Lệnh 3** | Đọc `count = 0` (vẫn cũ) → Lên lịch `1` | Callback nhận `prev = 2` → return `3` |
+| **Kết quả** | `count = 1` ❌ | `count = 3` ✅ |
+
+---
+
+**Khi nào dùng Callback Function?**
+
+| Tình huống | Dùng gì? | Ví dụ |
+|---|---|---|
+| Cập nhật **dựa trên giá trị cũ** | ✅ Callback | `setCount(prev => prev + 1)` |
+| Cập nhật **nhiều lần liên tiếp** trong cùng event | ✅ Callback | 3 lần `setCount` trong 1 `handleClick` |
+| Cập nhật **giá trị cố định** | Giá trị trực tiếp | `setCount(10)` |
+| Cập nhật **không phụ thuộc** state cũ | Giá trị trực tiếp | `setName("John")` |
+
+---
+
+**Ưu điểm của Callback Function:**
+- ✅ Luôn nhận giá trị **mới nhất** từ hàng đợi cập nhật.
+- ✅ Tránh lỗi **stale closure** (đọc giá trị cũ bị "đóng băng").
+- ✅ An toàn khi có nhiều lần cập nhật liên tiếp.
+
+**Kết luận:** Khi cập nhật state dựa trên giá trị cũ, **luôn dùng callback function** `setState(prev => ...)` thay vì `setState(state + 1)`.
+
+**Timeline chi tiết (Quy trình thực tế):**
+
+Ví dụ với `const [count, setCount] = useState(0)`:
+
+1. **Hành động:** User click → `handleClick()` gọi `setCount(1)`.
+2. **React kiểm tra:** React lấy giá trị `1` (đối số `A`) so sánh với `0` (giá trị cũ trong kho lưu trữ nội bộ).
+3. **Quyết định:** Thấy khác nhau → React lên lịch (schedule) re-render.
+4. **Thực thi:** React chạy lại hàm `Counter()` lần thứ 2.
+5. **Kết quả:** Ở lần chạy thứ 2, `useState(0)` trả về `[1, setCount]`. Lúc này biến `count` mới chính thức mang giá trị `1`.
+
+**Tại sao biến `state` không phải nguyên nhân?**
+- Vì `const [state, setState] = useState(...)` → Từ khóa `const` có nghĩa biến `state` **bị đóng băng** trong mỗi lần render.
+- Bạn **không thể** thay đổi `state` trực tiếp. Bạn chỉ có thể "yêu cầu" React đổi nó cho lần render sau thông qua `setState(A)`.
+
+**Mental Model: Máy in ảnh**
+
+Hãy tưởng tượng Component là **Máy in ảnh** và `state` là **Tờ ảnh** đang cầm trên tay.
+
+- **Bạn (User):** Gọi `setState(Ảnh Mới)`.
+- **React:** So sánh "Ảnh Mới" (A) và "Ảnh Cũ". Thấy khác nhau → React bấm nút "In lại".
+- **Máy in (Re-render):** Chạy vù vù và in ra một tờ giấy mới.
+- **Kết quả:** Lúc này trên tay bạn mới cầm **Tờ ảnh mới** (`state` mới).
+
+**Bảng tóm tắt:**
+
+| Đối tượng | Vai trò | Diễn giải |
+|---|---|---|
+| **`setState(A)`** | **Kích hoạt (Trigger/Cause)** | "Này React, tôi muốn giá trị lần tới là `A`. Hãy kiểm tra và chạy lại đi!" |
+| **`state`** | **Kết quả (Result/Snapshot)** | Là giá trị React đưa cho bạn **SAU KHI** đã re-render xong. |
+
+**Tóm lại:** Bạn gọi `setState(A)` → React so sánh `A` với giá trị cũ → Thấy khác biệt → React chạy lại hàm → Biến `state` mới được sinh ra.
 
 #### 2.3. Can you use other data types?
 
@@ -1897,6 +2386,398 @@ const ThemeContext = createContext('light');
 const theme = useContext(ThemeContext); // Nhận được "dark" ngay lập tức
 ```
 
+**Ví dụ đầy đủ:**
+
+```javascript
+import React, { createContext, useContext, useState } from 'react';
+
+// ==========================================
+// STEP 1: Create the Context
+// ==========================================
+// This creates the "tunnel." 'light' is the default value 
+// if no Provider is found (rarely used but good for testing).
+const ThemeContext = createContext('light');
+
+// ==========================================
+// STEP 2: The Consumer Component (The Child)
+// ==========================================
+// This component is deep in the tree. It uses the hook to 
+// "suck" data directly from the context.
+function ThemedButton() {
+  // 1. Access the context value
+  const theme = useContext(ThemeContext);
+
+  // Simple styling based on the theme value
+  const styles = {
+    backgroundColor: theme === 'dark' ? '#333' : '#FFF',
+    color: theme === 'dark' ? '#FFF' : '#000',
+    border: '1px solid #ccc',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px'
+  };
+
+  return (
+    <button style={styles}>
+      I am a {theme} button!
+    </button>
+  );
+}
+
+// ==========================================
+// Intermediate Component
+// ==========================================
+// Notice this component DOES NOT take any theme props.
+// It just passes the UI down. This solves "Prop Drilling".
+function Toolbar() {
+  return (
+    <div style={{ padding: '20px', border: '1px dashed grey' }}>
+      <p>Toolbar Component (I don't know the theme!)</p>
+      <ThemedButton /> 
+    </div>
+  );
+}
+
+// ==========================================
+// STEP 3: The Provider Component (The Parent)
+// ==========================================
+// This is the top-level component that manages the state
+// and pushes it into the "tunnel" (Provider).
+export default function App() {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  return (
+    // We wrap everything in the Provider.
+    // The 'value' prop is what sends data into the tunnel.
+    <ThemeContext.Provider value={theme}>
+      
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>useContext Example</h1>
+        
+        {/* Button to control the state */}
+        <button onClick={toggleTheme} style={{ marginBottom: '20px' }}>
+          Toggle Theme
+        </button>
+
+        {/* The Toolbar sits inside the Provider */}
+        <Toolbar />
+        
+      </div>
+
+    </ThemeContext.Provider>
+  );
+}
+```
+
+---
+
+#### Giải thích chi tiết code (Phân tích từng dòng)
+
+Bây giờ chúng ta sẽ "dịch" code trên sang ngôn ngữ thường, phân tích từng thành phần theo: **Action (Hành động)**, **Function (Hàm)**, **Variables (Biến)**, **Input (Đầu vào)**, **Output (Đầu ra)**, **Data Type (Kiểu dữ liệu)**, và **Naming (Quy tắc đặt tên)**.
+
+---
+
+##### BƯỚC 1: Import các công cụ cần thiết
+
+```javascript
+import React, { createContext, useContext, useState } from 'react';
+```
+
+| Thành phần | Phân loại | Giải thích | Naming |
+|---|---|---|---|
+| `import` | **Action** | Hành động nhập (import) các công cụ từ thư viện React | Từ khóa hệ thống (System Standard) |
+| `React` | **Object** | Object chính của thư viện React (ít dùng trực tiếp trong code hiện đại) | Tên chuẩn (System Standard) |
+| `createContext` | **Function** | Hàm tạo ra một Context (đường hầm) | Tên chuẩn (System Standard) |
+| `useContext` | **Hook Function** | Hook để "hút" dữ liệu từ Context | Tên chuẩn (System Standard) |
+| `useState` | **Hook Function** | Hook để tạo State (bộ nhớ) | Tên chuẩn (System Standard) |
+
+---
+
+##### BƯỚC 2: Tạo Context (Đường hầm)
+
+```javascript
+const ThemeContext = createContext('light');
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `createContext` | **Function** | `'light'` (giá trị mặc định) | Context Object | Function: Built-in<br>Input: String<br>Output: Context Object | System Standard |
+| `'light'` | **Default Value** | N/A | N/A | **String** | Changeable (có thể đổi thành `'dark'` hoặc giá trị khác) |
+| `ThemeContext` | **Variable (Constant)** | N/A | Context Object | **Context Object** | Changeable (PascalCase, nên đặt tên theo mục đích: `UserContext`, `LanguageContext`) |
+
+**Action (Hành động):**
+- Tạo một "đường hầm" tên là `ThemeContext`.
+- Giá trị mặc định của đường hầm này là `'light'` (chỉ dùng khi không có Provider bao bọc).
+
+**Mental Model:**
+> Tưởng tượng bạn đào một cái hầm xuyên núi. Cái hầm này tên là `ThemeContext`. Nếu không có ai bơm nước (Provider) vào hầm, thì mặc định trong hầm có nước "light" (ánh sáng).
+
+---
+
+##### BƯỚC 3: Component Con - ThemedButton (Người tiêu thụ)
+
+###### 3.1. Khai báo Component
+
+```javascript
+function ThemedButton() {
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `ThemedButton` | **Function Component** | `props` (ẩn, không dùng) | React Element (JSX) | Function: Component<br>Output: React Element Object | Changeable (PascalCase) |
+
+**Action:** Định nghĩa một Component tên `ThemedButton` (Nút có chủ đề).
+
+---
+
+###### 3.2. Hút dữ liệu từ Context
+
+```javascript
+const theme = useContext(ThemeContext);
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `useContext` | **Hook Function** | `ThemeContext` (Context Object) | Giá trị hiện tại trong Context | Function: Built-in Hook<br>Input: Context Object<br>Output: **String** (`'light'` hoặc `'dark'`) | System Standard |
+| `ThemeContext` | **Input (Context Object)** | N/A | N/A | **Context Object** | Đã định nghĩa ở Bước 2 |
+| `theme` | **Variable (Constant)** | N/A | Giá trị từ Context | **String** | Changeable (camelCase, nên đặt theo ý nghĩa: `currentTheme`, `mode`) |
+
+**Action:** "Hút" giá trị hiện tại từ đường hầm `ThemeContext` và lưu vào biến `theme`.
+
+**Mental Model:**
+> Component này cắm một cái ống hút vào đường hầm `ThemeContext` và hút nước ra. Nước hút được (giá trị) được đổ vào cái ly tên `theme`.
+
+---
+
+###### 3.3. Tạo Object Styles (Kiểu dáng)
+
+```javascript
+const styles = {
+  backgroundColor: theme === 'dark' ? '#333' : '#FFF',
+  color: theme === 'dark' ? '#FFF' : '#000',
+  border: '1px solid #ccc',
+  padding: '10px 20px',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  marginTop: '10px'
+};
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `styles` | **Variable (Constant)** | N/A | Object chứa CSS properties | **Object** | Changeable (camelCase) |
+| `backgroundColor` | **Object Property** | `theme` (String) | String (mã màu) | **String** | System Standard (CSS property) |
+| `theme === 'dark' ? '#333' : '#FFF'` | **Ternary Operator** | `theme` (String) | `'#333'` hoặc `'#FFF'` | **String** | Logic (Changeable) |
+
+**Action:** Tạo một Object `styles` chứa các thuộc tính CSS. Màu sắc thay đổi dựa trên giá trị của `theme`.
+
+**Logic:**
+- Nếu `theme === 'dark'` → Nền đen (`#333`), chữ trắng (`#FFF`)
+- Nếu `theme === 'light'` → Nền trắng (`#FFF`), chữ đen (`#000`)
+
+---
+
+###### 3.4. Return JSX (Giao diện)
+
+```javascript
+return (
+  <button style={styles}>
+    I am a {theme} button!
+  </button>
+);
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `return` | **Keyword** | JSX Expression | React Element | Keyword: System<br>Output: React Element Object | System Standard |
+| `<button>` | **JSX Element** | N/A | React Element | **React Element** | HTML Standard |
+| `style={styles}` | **JSX Prop** | `styles` (Object) | N/A | **Object** | System Standard |
+| `{theme}` | **JSX Expression** | `theme` (String) | String hiển thị | **String** | Variable từ Bước 3.2 |
+
+**Action:** Trả về một nút bấm (`<button>`) với style động và text hiển thị giá trị `theme`.
+
+---
+
+##### BƯỚC 4: Component Trung gian - Toolbar (Không biết gì về theme)
+
+```javascript
+function Toolbar() {
+  return (
+    <div style={{ padding: '20px', border: '1px dashed grey' }}>
+      <p>Toolbar Component (I don't know the theme!)</p>
+      <ThemedButton /> 
+    </div>
+  );
+}
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `Toolbar` | **Function Component** | `props` (ẩn, không dùng) | React Element (JSX) | Function: Component<br>Output: React Element | Changeable (PascalCase) |
+| `<ThemedButton />` | **JSX Component** | Không truyền props nào | React Element | **React Element** | Component từ Bước 3 |
+
+**Action:** Tạo một Component trung gian. Component này **KHÔNG** nhận props `theme` từ cha, nhưng vẫn render được `ThemedButton` (vì `ThemedButton` tự hút dữ liệu từ Context).
+
+**Mental Model:**
+> `Toolbar` giống như một người đứng giữa. Nó không cần biết "nước" (theme) là gì, nó chỉ cần đặt cái ống (`<ThemedButton />`) vào đúng vị trí. Cái ống tự hút nước từ đường hầm.
+
+**Giải quyết vấn đề Prop Drilling:**
+- Nếu không có Context, bạn phải làm thế này:
+  ```javascript
+  // Cha truyền cho Toolbar
+  <Toolbar theme={theme} />
+  
+  // Toolbar nhận và truyền tiếp cho ThemedButton
+  function Toolbar({ theme }) {
+    return <ThemedButton theme={theme} />
+  }
+  ```
+- Với Context, `Toolbar` **không cần** nhận và truyền tiếp `theme` nữa!
+
+---
+
+##### BƯỚC 5: Component Cha - App (Người quản lý State)
+
+###### 5.1. Khai báo Component
+
+```javascript
+export default function App() {
+```
+
+| Thành phần | Phân loại | Data Type | Naming |
+|---|---|---|---|
+| `export default` | **Keyword** | N/A | System Standard |
+| `App` | **Function Component** | Function | Changeable (PascalCase) |
+
+**Action:** Định nghĩa Component chính tên `App` và export nó làm mặc định.
+
+---
+
+###### 5.2. Tạo State (Bộ nhớ)
+
+```javascript
+const [theme, setTheme] = useState('light');
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `useState` | **Hook Function** | `'light'` (giá trị khởi tạo) | Array `[state, setState]` | Function: Built-in Hook<br>Input: **String**<br>Output: **Array** | System Standard |
+| `'light'` | **Initial State** | N/A | N/A | **String** | Changeable |
+| `theme` | **State Variable** | N/A | Giá trị hiện tại của State | **String** (`'light'` hoặc `'dark'`) | Changeable (camelCase) |
+| `setTheme` | **State Setter Function** | Giá trị mới (String) hoặc Updater Function | `undefined` (void) | Function: Setter<br>Input: **String** hoặc **Function**<br>Output: **void** | System Pattern: `set` + Tên State (PascalCase) |
+
+**Action:** Tạo một State tên `theme` với giá trị ban đầu là `'light'`. Hàm `setTheme` dùng để thay đổi giá trị của `theme`.
+
+---
+
+###### 5.3. Tạo Handler Function (Hàm xử lý sự kiện)
+
+```javascript
+const toggleTheme = () => {
+  setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+};
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `toggleTheme` | **Handler Function** | N/A (không nhận tham số) | `undefined` (void) | Function: Event Handler<br>Output: **void** | Changeable (camelCase, pattern: `handle` + Action hoặc `toggle` + Noun) |
+| `setTheme` | **Function Call** | Updater Function | `undefined` | Function: Setter | Từ Bước 5.2 |
+| `(prevTheme) => (...)` | **Updater Function** | `prevTheme` (giá trị State hiện tại) | Giá trị State mới | Function: Arrow Function<br>Input: **String**<br>Output: **String** | Pattern: `prev` + Tên State |
+| `prevTheme` | **Parameter** | N/A | N/A | **String** | Pattern chuẩn (Changeable: `prev`, `old`, `current`) |
+| `prevTheme === 'light' ? 'dark' : 'light'` | **Ternary Operator** | `prevTheme` (String) | `'dark'` hoặc `'light'` | **String** | Logic |
+
+**Action:** Tạo một hàm `toggleTheme` để đảo ngược giá trị của `theme`:
+- Nếu đang là `'light'` → Đổi thành `'dark'`
+- Nếu đang là `'dark'` → Đổi thành `'light'`
+
+**Tại sao dùng Updater Function `(prevTheme) => ...`?**
+> Vì giá trị mới (`'dark'` hoặc `'light'`) phụ thuộc vào giá trị cũ. Dùng Updater Function đảm bảo React luôn lấy giá trị State mới nhất (tránh bug khi State cập nhật bất đồng bộ).
+
+---
+
+###### 5.4. Return JSX với Provider
+
+```javascript
+return (
+  <ThemeContext.Provider value={theme}>
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h1>useContext Example</h1>
+      
+      <button onClick={toggleTheme} style={{ marginBottom: '20px' }}>
+        Toggle Theme
+      </button>
+
+      <Toolbar />
+    </div>
+  </ThemeContext.Provider>
+);
+```
+
+| Thành phần | Phân loại | Input | Output | Data Type | Naming |
+|---|---|---|---|---|---|
+| `<ThemeContext.Provider>` | **JSX Component** | `value` prop | React Element | **React Element** | System Pattern: `ContextName.Provider` |
+| `value={theme}` | **JSX Prop** | `theme` (String) | N/A | **String** | System Standard (prop name: `value`) |
+| `onClick={toggleTheme}` | **JSX Event Prop** | `toggleTheme` (Function) | N/A | **Function** | System Standard (event: `onClick`) |
+| `<Toolbar />` | **JSX Component** | Không có props | React Element | **React Element** | Component từ Bước 4 |
+
+**Action:**
+1. **Bọc toàn bộ UI** trong `<ThemeContext.Provider>` → Tạo "đường hầm" và bơm giá trị `theme` vào.
+2. **Tạo nút "Toggle Theme"** → Khi click, gọi hàm `toggleTheme` để đổi theme.
+3. **Render `<Toolbar />`** → Component này sẽ render `<ThemedButton />`, và `ThemedButton` sẽ tự động nhận giá trị `theme` từ Context.
+
+**Mental Model:**
+> Component `App` giống như một trạm bơm nước. Nó bơm nước (giá trị `theme`) vào đường hầm (`ThemeContext.Provider`). Bất kỳ ai ở bên trong đường hầm (bên trong `<ThemeContext.Provider>`) đều có thể cắm ống hút (`useContext`) để lấy nước.
+
+---
+
+#### Tổng kết luồng dữ liệu (Data Flow)
+
+```
+1. User click nút "Toggle Theme"
+   ↓
+2. Gọi hàm toggleTheme()
+   ↓
+3. Gọi setTheme() → State 'theme' thay đổi từ 'light' → 'dark'
+   ↓
+4. React render lại Component App
+   ↓
+5. Provider nhận giá trị mới: <ThemeContext.Provider value="dark">
+   ↓
+6. Component ThemedButton (ở sâu bên trong) gọi useContext(ThemeContext)
+   ↓
+7. useContext trả về giá trị mới: "dark"
+   ↓
+8. ThemedButton render lại với style mới (nền đen, chữ trắng)
+```
+
+**Điểm quan trọng:**
+- `Toolbar` **KHÔNG** bị render lại (vì không dùng `theme`).
+- Chỉ `ThemedButton` render lại (vì nó subscribe vào Context qua `useContext`).
+
+---
+
+#### Bảng tổng hợp Data Types
+
+| Biến/Hàm | Kiểu dữ liệu (Data Type) | Có thể đổi tên? |
+|---|---|---|
+| `ThemeContext` | **Context Object** | ✅ Có (PascalCase) |
+| `theme` (trong `App`) | **String** (`'light'` \| `'dark'`) | ✅ Có (camelCase) |
+| `setTheme` | **Function** (Setter) | ✅ Có (pattern: `set` + Tên) |
+| `toggleTheme` | **Function** (Handler) | ✅ Có (camelCase) |
+| `theme` (trong `ThemedButton`) | **String** (`'light'` \| `'dark'`) | ✅ Có (camelCase) |
+| `styles` | **Object** (CSS properties) | ✅ Có (camelCase) |
+| `prevTheme` | **String** (tham số của Updater Function) | ✅ Có (pattern: `prev` + Tên) |
+| `createContext` | **Function** (Built-in) | ❌ Không (System Standard) |
+| `useContext` | **Hook Function** (Built-in) | ❌ Không (System Standard) |
+| `useState` | **Hook Function** (Built-in) | ❌ Không (System Standard) |
+
+---
+
 ### 3. Custom Hooks: Vũ khí của chuyên gia
 
 Đến lúc này, bạn thấy Component bắt đầu phình to vì chứa quá nhiều logic (State, Effect, Handler...). Làm sao để tái sử dụng logic này cho component khác?
@@ -1981,21 +2862,440 @@ const Child = React.memo(({ name }) => {
 
 ### 2. Forms: Giao tiếp với người dùng
 
-Có 2 cách để xử lý Form trong React:
+Forms (Biểu mẫu) là cách chính để thu thập dữ liệu từ người dùng. Trong React, có 2 triết lý xử lý form hoàn toàn khác nhau.
+
+---
+
+#### Mental Model: Puppet vs Independent Actor
+
+Hãy tưởng tượng một ô input như một **diễn viên** trên sân khấu:
+
+| Loại | Ẩn dụ | Ai quyết định giá trị? | Khi nào lấy dữ liệu? |
+|---|---|---|---|
+| **Controlled** | **Con rối** (Puppet) | React (State) | Mọi lúc (real-time) |
+| **Uncontrolled** | **Diễn viên độc lập** | DOM (Browser) | Khi cần (on-demand) |
+
+**Controlled Component:** React cầm dây điều khiển con rối. Mỗi ký tự người dùng gõ → React cập nhật State → State đẩy giá trị mới xuống input. React luôn biết input đang chứa gì.
+
+**Uncontrolled Component:** Diễn viên tự do diễn. React không quan tâm input đang chứa gì cho đến khi cần (ví dụ: khi submit form), lúc đó mới "hỏi" DOM.
+
+---
 
 #### 2.1. Controlled Component (Khuyên dùng)
 
-React nắm quyền kiểm soát hoàn toàn. Dữ liệu trong input luôn đồng bộ với State.
+**Định nghĩa:** React nắm quyền kiểm soát hoàn toàn. Dữ liệu trong input luôn đồng bộ với State.
+
+**Đặc điểm:**
+- ✅ **Single Source of Truth:** State là nguồn sự thật duy nhất.
+- ✅ **Validation real-time:** Kiểm tra lỗi ngay khi gõ.
+- ✅ **Dễ debug:** Bạn luôn biết giá trị hiện tại trong State.
+- ❌ **Verbose:** Cần viết nhiều code hơn (mỗi input cần 1 state + 1 handler).
+
+**Cơ chế hoạt động:**
+
+```
+User gõ "A" → onChange kích hoạt → setState("A") → Re-render → Input hiển thị "A"
+```
+
+**Quy tắc vàng:** Input **PHẢI** có cả 2 props:
+1. `value={state}` - Khóa giá trị vào State
+2. `onChange={handler}` - Cập nhật State khi user gõ
+
+##### Ví dụ 1: Input đơn giản
 
 ```jsx
-const [value, setValue] = useState("");
-// Input bị khóa vào state value
-<input value={value} onChange={e => setValue(e.target.value)} />
+import { useState } from 'react';
+
+function NameForm() {
+  const [name, setName] = useState("");
+
+  return (
+    <div>
+      <input 
+        type="text"
+        value={name}  // Giá trị luôn đồng bộ với state
+        onChange={(e) => setName(e.target.value)}  // Cập nhật state mỗi lần gõ
+        placeholder="Nhập tên của bạn"
+      />
+      <p>Bạn đang gõ: {name}</p>  {/* Real-time display */}
+    </div>
+  );
+}
 ```
+
+**Giải thích:**
+- `e.target.value`: Lấy giá trị hiện tại của input từ sự kiện `onChange`.
+- Mỗi lần gõ → `setName` cập nhật state → Component re-render → Input hiển thị giá trị mới.
+
+##### Ví dụ 2: Form đầy đủ với validation
+
+```jsx
+import { useState } from 'react';
+
+function RegistrationForm() {
+  // State cho từng field
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    age: "",
+    gender: "male",
+    agreeTerms: false
+  });
+
+  // State cho errors
+  const [errors, setErrors] = useState({});
+
+  // Handler chung cho tất cả text inputs
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Validation function
+  const validate = () => {
+    const newErrors = {};
+    
+    if (formData.username.length < 3) {
+      newErrors.username = "Tên phải có ít nhất 3 ký tự";
+    }
+    
+    if (!formData.email.includes('@')) {
+      newErrors.email = "Email không hợp lệ";
+    }
+    
+    if (formData.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+    
+    if (formData.age && (formData.age < 18 || formData.age > 100)) {
+      newErrors.age = "Tuổi phải từ 18-100";
+    }
+    
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = "Bạn phải đồng ý điều khoản";
+    }
+    
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();  // Ngăn trình duyệt reload trang
+    
+    const validationErrors = validate();
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    
+    // Submit thành công
+    console.log("Form data:", formData);
+    alert("Đăng ký thành công!");
+    setErrors({});
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
+      <h2>Đăng ký tài khoản</h2>
+      
+      {/* Text Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Tên đăng nhập:</label>
+        <input
+          type="text"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          style={{ width: '100%', padding: '8px' }}
+        />
+        {errors.username && <p style={{ color: 'red', fontSize: '12px' }}>{errors.username}</p>}
+      </div>
+
+      {/* Email Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Email:</label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          style={{ width: '100%', padding: '8px' }}
+        />
+        {errors.email && <p style={{ color: 'red', fontSize: '12px' }}>{errors.email}</p>}
+      </div>
+
+      {/* Password Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Mật khẩu:</label>
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          style={{ width: '100%', padding: '8px' }}
+        />
+        {errors.password && <p style={{ color: 'red', fontSize: '12px' }}>{errors.password}</p>}
+      </div>
+
+      {/* Number Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Tuổi:</label>
+        <input
+          type="number"
+          name="age"
+          value={formData.age}
+          onChange={handleChange}
+          style={{ width: '100%', padding: '8px' }}
+        />
+        {errors.age && <p style={{ color: 'red', fontSize: '12px' }}>{errors.age}</p>}
+      </div>
+
+      {/* Select/Dropdown */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Giới tính:</label>
+        <select
+          name="gender"
+          value={formData.gender}
+          onChange={handleChange}
+          style={{ width: '100%', padding: '8px' }}
+        >
+          <option value="male">Nam</option>
+          <option value="female">Nữ</option>
+          <option value="other">Khác</option>
+        </select>
+      </div>
+
+      {/* Checkbox */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>
+          <input
+            type="checkbox"
+            name="agreeTerms"
+            checked={formData.agreeTerms}
+            onChange={handleChange}
+          />
+          {' '}Tôi đồng ý với điều khoản
+        </label>
+        {errors.agreeTerms && <p style={{ color: 'red', fontSize: '12px' }}>{errors.agreeTerms}</p>}
+      </div>
+
+      <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer' }}>
+        Đăng ký
+      </button>
+
+      {/* Debug: Hiển thị state hiện tại */}
+      <pre style={{ marginTop: '20px', background: '#f4f4f4', padding: '10px' }}>
+        {JSON.stringify(formData, null, 2)}
+      </pre>
+    </form>
+  );
+}
+
+export default RegistrationForm;
+```
+
+**Kỹ thuật nâng cao trong ví dụ:**
+
+1. **Computed Property Name:** `[name]: value` - Dùng giá trị của biến `name` làm key của object.
+2. **Single Handler:** Một hàm `handleChange` xử lý tất cả inputs thay vì viết riêng từng hàm.
+3. **Conditional Logic:** Xử lý checkbox khác với text input (`checked` vs `value`).
+4. **Real-time Validation:** Có thể thêm validation ngay trong `handleChange` để hiển thị lỗi khi gõ.
+
+---
 
 #### 2.2. Uncontrolled Component
 
-Dùng `useRef` để "chọc" vào DOM lấy dữ liệu khi cần (giống HTML truyền thống). Dùng cho input file hoặc form quá đơn giản.
+**Định nghĩa:** DOM (trình duyệt) giữ dữ liệu. React chỉ "hỏi" DOM khi cần (thường là khi submit).
+
+**Đặc điểm:**
+- ✅ **Ít code hơn:** Không cần state cho mỗi input.
+- ✅ **Tích hợp dễ với thư viện non-React:** Ví dụ: jQuery plugins.
+- ✅ **Performance tốt hơn:** Không re-render mỗi lần gõ.
+- ❌ **Khó validate real-time:** Phải đợi đến khi submit.
+- ❌ **Khó debug:** Không biết giá trị hiện tại cho đến khi "hỏi" DOM.
+
+**Cơ chế hoạt động:**
+
+```
+User gõ "A" → DOM tự lưu "A" → React không biết gì → Submit → useRef.current.value lấy "A"
+```
+
+##### Ví dụ 1: Form đơn giản với useRef
+
+```jsx
+import { useRef } from 'react';
+
+function UncontrolledForm() {
+  // Tạo ref để "trỏ" đến DOM element
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Lấy giá trị từ DOM khi submit
+    const name = nameRef.current.value;
+    const email = emailRef.current.value;
+    
+    console.log("Submitted:", { name, email });
+    alert(`Xin chào ${name}!`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>Tên:</label>
+        <input 
+          type="text" 
+          ref={nameRef}  // Gắn ref vào input
+          defaultValue="Nguyễn Văn A"  // Giá trị mặc định (không phải value)
+        />
+      </div>
+      
+      <div>
+        <label>Email:</label>
+        <input 
+          type="email" 
+          ref={emailRef}
+        />
+      </div>
+      
+      <button type="submit">Gửi</button>
+    </form>
+  );
+}
+```
+
+**Lưu ý quan trọng:**
+- Dùng `defaultValue` thay vì `value` (vì không có state để đồng bộ).
+- Dùng `ref={nameRef}` để tạo "cầu nối" đến DOM element.
+- Chỉ đọc giá trị khi cần: `nameRef.current.value`.
+
+##### Ví dụ 2: File Upload (Use case điển hình)
+
+```jsx
+import { useRef } from 'react';
+
+function FileUploadForm() {
+  const fileInputRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Lấy file từ input
+    const file = fileInputRef.current.files[0];
+    
+    if (file) {
+      console.log("File name:", file.name);
+      console.log("File size:", file.size, "bytes");
+      console.log("File type:", file.type);
+      
+      // Thực tế: Upload file lên server
+      // uploadToServer(file);
+    } else {
+      alert("Vui lòng chọn file!");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input 
+        type="file" 
+        ref={fileInputRef}
+        accept="image/*"  // Chỉ chấp nhận ảnh
+      />
+      <button type="submit">Upload</button>
+    </form>
+  );
+}
+```
+
+**Tại sao file input phải dùng Uncontrolled?**
+- Vì lý do bảo mật, JavaScript **không thể** set giá trị cho `<input type="file">`.
+- Bạn không thể làm `<input type="file" value={someFile} />` → Lỗi!
+- Chỉ có thể **đọc** file sau khi user chọn.
+
+---
+
+#### So sánh Controlled vs Uncontrolled
+
+| Tiêu chí | Controlled | Uncontrolled |
+|---|---|---|
+| **Nguồn sự thật** | React State | DOM |
+| **Cú pháp** | `value={state}` + `onChange` | `ref={myRef}` + `defaultValue` |
+| **Khi nào lấy dữ liệu?** | Mọi lúc (real-time) | Khi cần (on-demand) |
+| **Validation** | ✅ Real-time dễ dàng | ❌ Chỉ khi submit |
+| **Re-render** | Mỗi lần gõ | Không re-render |
+| **Code lượng** | Nhiều hơn | Ít hơn |
+| **Use case** | Form phức tạp, cần validation | Form đơn giản, file upload |
+
+---
+
+#### Khi nào dùng cái nào?
+
+**Dùng Controlled Component khi:**
+- ✅ Cần validation real-time (hiển thị lỗi ngay khi gõ).
+- ✅ Cần disable/enable nút submit dựa trên giá trị input.
+- ✅ Cần format input (ví dụ: tự động thêm dấu phẩy vào số tiền).
+- ✅ Cần đồng bộ nhiều inputs (ví dụ: password và confirm password).
+- ✅ Form có logic phức tạp.
+
+**Dùng Uncontrolled Component khi:**
+- ✅ Form cực kỳ đơn giản (1-2 inputs).
+- ✅ File upload (bắt buộc).
+- ✅ Tích hợp với thư viện non-React.
+- ✅ Cần performance tối đa (form có hàng trăm inputs).
+
+**Quy tắc vàng:** **Mặc định dùng Controlled**. Chỉ chuyển sang Uncontrolled khi có lý do rõ ràng.
+
+---
+
+#### Lỗi thường gặp
+
+**❌ Lỗi 1: Thiếu onChange**
+
+```jsx
+// SAI: Input bị "đóng băng", không gõ được
+<input value={name} />
+```
+
+**Lý do:** React khóa giá trị vào `name`. Khi gõ, DOM muốn thay đổi nhưng React không cho phép (vì không có `onChange` để cập nhật state).
+
+**✅ Sửa:**
+
+```jsx
+<input value={name} onChange={(e) => setName(e.target.value)} />
+```
+
+---
+
+**❌ Lỗi 2: Dùng value thay vì defaultValue cho Uncontrolled**
+
+```jsx
+// SAI: Trở thành Controlled nhưng thiếu onChange
+<input ref={myRef} value="Initial" />
+```
+
+**✅ Sửa:**
+
+```jsx
+<input ref={myRef} defaultValue="Initial" />
+```
+
+---
+
+**❌ Lỗi 3: Trộn lẫn Controlled và Uncontrolled**
+
+```jsx
+// SAI: Không thể vừa có value vừa có ref
+<input value={name} ref={myRef} onChange={...} />
+```
+
+**Quy tắc:** Chọn một trong hai, không được trộn lẫn.
 
 ### 3. Routing: Ảo thuật chuyển trang (SPA)
 
@@ -2018,6 +3318,2691 @@ import { Routes, Route, Link } from "react-router-dom";
 // Sử dụng Link thay cho thẻ <a>
 <Link to="/about">Về chúng tôi</Link>
 ```
+
+---
+
+## PHẦN 7: NEXT.JS - FRAMEWORK REACT PRODUCTION-READY
+
+### Giới thiệu: Tại sao cần Next.js?
+
+React là một **thư viện** (library) chỉ tập trung vào UI. Khi xây dựng ứng dụng thực tế, bạn cần thêm nhiều thứ:
+
+| Vấn đề | React thuần | Next.js |
+|---|---|---|
+| **Routing** | Phải cài `react-router-dom` | ✅ Built-in, file-based routing |
+| **SEO** | ❌ Kém (vì Client-Side Rendering) | ✅ Tốt (Server-Side Rendering) |
+| **Performance** | Phải tự tối ưu | ✅ Tự động tối ưu (code splitting, image optimization) |
+| **API Backend** | Phải tạo server riêng | ✅ API Routes built-in |
+| **Deployment** | Phải config phức tạp | ✅ Deploy 1 click với Vercel |
+
+> **Mental Model:** Nếu React là "động cơ xe", thì Next.js là "cả chiếc ô tô hoàn chỉnh" (có vô lăng, ghế ngồi, điều hòa...).
+
+---
+
+### 0. Kiến thức nền tảng: npm, npx và Node.js
+
+Trước khi cài đặt Next.js, bạn cần hiểu một số công cụ cơ bản trong hệ sinh thái JavaScript/Node.js.
+
+#### 0.1. Node.js là gì?
+
+**Node.js** là môi trường chạy JavaScript **ngoài trình duyệt** (trên máy tính/server của bạn).
+
+**Mental Model:**
+- **Trình duyệt**: Chạy JavaScript để tương tác với trang web (DOM, events)
+- **Node.js**: Chạy JavaScript để làm bất cứ thứ gì (đọc file, tạo server, build tools)
+
+**Cài đặt Node.js:**
+1. Truy cập: [nodejs.org](https://nodejs.org)
+2. Tải phiên bản LTS (Long Term Support)
+3. Cài đặt và kiểm tra:
+
+```bash
+node --version   # v20.x.x
+npm --version    # 10.x.x
+```
+
+---
+
+#### 0.2. npm (Node Package Manager)
+
+**npm** là công cụ quản lý thư viện (packages) cho JavaScript.
+
+**Ẩn dụ:** npm giống như **App Store** cho code JavaScript.
+- Bạn muốn dùng React? → `npm install react`
+- Bạn muốn dùng Next.js? → `npm install next`
+
+##### Các lệnh npm cơ bản:
+
+```bash
+# Cài đặt package
+npm install react          # Cài React vào project hiện tại
+npm install -g vercel      # Cài global (dùng được ở mọi nơi)
+
+# Chạy scripts (định nghĩa trong package.json)
+npm run dev                # Chạy development server
+npm run build              # Build production
+npm start                  # Chạy production server
+
+# Khác
+npm init                   # Tạo package.json mới
+npm uninstall react        # Gỡ package
+```
+
+---
+
+#### 0.3. npx (Node Package Execute)
+
+**npx** cho phép **chạy** một package **mà không cần cài đặt** vĩnh viễn.
+
+**Sự khác biệt:**
+
+| Lệnh | npm | npx |
+|---|---|---|
+| **Mục đích** | Cài đặt package | Chạy package (1 lần) |
+| **Ví dụ** | `npm install create-next-app` | `npx create-next-app@latest` |
+| **Kết quả** | Package lưu vào `node_modules/` | Chạy xong → Xóa |
+
+**Tại sao dùng npx?**
+- ✅ Luôn dùng phiên bản mới nhất (`@latest`)
+- ✅ Không làm "bẩn" máy tính (không cài đặt vĩnh viễn)
+- ✅ Tiết kiệm dung lượng
+
+**Ví dụ thực tế:**
+
+```bash
+# Tạo Next.js project (dùng npx - khuyên dùng)
+npx create-next-app@latest my-app
+
+# Tương đương với (dùng npm - cách cũ):
+npm install -g create-next-app   # Bước 1: Cài global
+create-next-app my-app            # Bước 2: Chạy
+```
+
+---
+
+#### 0.4. package.json - "Hồ sơ" của Project
+
+**package.json** là file chứa thông tin về project: tên, phiên bản, dependencies, scripts.
+
+**Ví dụ package.json của Next.js project:**
+
+```json
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "next": "15.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  }
+}
+```
+
+**Giải thích:**
+
+| Phần | Ý nghĩa | Ví dụ |
+|---|---|---|
+| **`name`** | Tên project | `"my-app"` |
+| **`version`** | Phiên bản hiện tại | `"0.1.0"` |
+| **`scripts`** | Các lệnh shortcut | `npm run dev` → chạy `next dev` |
+| **`dependencies`** | Thư viện cần để chạy app | React, Next.js |
+| **`devDependencies`** | Thư viện chỉ cần khi develop | ESLint, TypeScript |
+
+**Cách hoạt động:**
+
+1. Bạn chạy `npm install` → npm đọc `package.json`
+2. npm tải tất cả packages trong `dependencies` và `devDependencies`
+3. Lưu vào folder `node_modules/`
+
+---
+
+#### 0.5. node_modules/ và .gitignore
+
+**`node_modules/`**: Folder chứa tất cả code của các thư viện đã cài.
+- ⚠️ Rất nặng (có thể 100MB - 1GB)
+- ❌ **KHÔNG BAO GIỜ** commit lên Git
+
+**`.gitignore`**: File liệt kê những gì Git nên bỏ qua.
+
+```
+# .gitignore
+node_modules/
+.env.local
+.next/
+```
+
+**Quy trình làm việc nhóm:**
+
+1. **Người A** tạo project → Commit `package.json` (không commit `node_modules/`)
+2. **Người B** clone project → Chạy `npm install` → npm tự động tải `node_modules/`
+
+---
+
+#### 0.6. Các công cụ khác trong setup
+
+##### A. ESLint
+
+**ESLint** là công cụ kiểm tra lỗi code tự động (linter).
+
+**Ví dụ lỗi ESLint bắt được:**
+```javascript
+const name = "An"  // ❌ Thiếu dấu chấm phẩy
+const age = 25;    // ✅ OK
+```
+
+**Lợi ích:**
+- ✅ Bắt lỗi cú pháp trước khi chạy
+- ✅ Đồng nhất code style trong team
+- ✅ Gợi ý best practices
+
+##### B. Tailwind CSS
+
+**Tailwind CSS** là CSS framework dùng **utility classes**.
+
+**So sánh:**
+
+```css
+/* CSS truyền thống */
+.button {
+  background-color: blue;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+```
+
+```jsx
+{/* Tailwind CSS */}
+<button className="bg-blue-500 text-white px-5 py-2 rounded">
+  Click me
+</button>
+```
+
+**Ưu điểm:**
+- ✅ Viết CSS nhanh hơn (không cần đặt tên class)
+- ✅ Không bị CSS conflict
+- ✅ Responsive dễ dàng (`md:`, `lg:`)
+
+##### C. Import Alias (@/)
+
+**Vấn đề:** Import path dài và khó đọc.
+
+```javascript
+// ❌ Khó đọc, dễ sai
+import Button from '../../../components/Button';
+import { formatDate } from '../../../../lib/utils';
+```
+
+**Giải pháp:** Dùng alias `@/` trỏ đến `src/`.
+
+```javascript
+// ✅ Dễ đọc, không sai
+import Button from '@/components/Button';
+import { formatDate } from '@/lib/utils';
+```
+
+**Config (Next.js tự động setup):**
+
+```json
+// tsconfig.json hoặc jsconfig.json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+---
+
+#### 0.7. Tóm tắt
+
+**Trước khi cài Next.js, bạn cần:**
+- ✅ Cài Node.js (bao gồm npm)
+- ✅ Hiểu `npm install` (cài packages)
+- ✅ Hiểu `npx` (chạy packages 1 lần)
+- ✅ Hiểu `package.json` (hồ sơ project)
+- ✅ Biết `node_modules/` không commit lên Git
+
+**Kiểm tra nhanh:**
+
+```bash
+node --version   # Phải có kết quả (v18+)
+npm --version    # Phải có kết quả (v9+)
+```
+
+Nếu cả hai lệnh đều hoạt động → Bạn đã sẵn sàng cài Next.js! 🚀
+
+---
+
+### 1. Cài đặt và Khởi tạo Project
+
+#### Tạo project mới (Next.js 15+)
+
+```bash
+npx create-next-app@latest my-app
+```
+
+**Câu hỏi trong quá trình cài đặt:**
+
+```
+✔ Would you like to use TypeScript? … No / Yes
+✔ Would you like to use ESLint? … No / Yes
+✔ Would you like to use Tailwind CSS? … No / Yes
+✔ Would you like to use `src/` directory? … No / Yes
+✔ Would you like to use App Router? (recommended) … No / Yes
+✔ Would you like to customize the default import alias (@/*)? … No / Yes
+```
+
+**Khuyến nghị cho người mới:**
+- TypeScript: **Yes** (nếu đã quen) hoặc **No** (nếu mới học)
+- ESLint: **Yes**
+- Tailwind CSS: **Yes** (CSS framework tiện lợi)
+- **`src/` directory: Yes** (tổ chức code rõ ràng hơn) - _Xem giải thích chi tiết bên dưới_
+- App Router: **Yes** (chuẩn mới, mạnh hơn)
+- Import alias: **Yes** (dùng `@/components` thay vì `../../components`)
+
+---
+
+#### Giải thích: `src/` directory là gì?
+
+Đây là lựa chọn về **cấu trúc thư mục** cho project Next.js của bạn.
+
+##### **Option 1: KHÔNG dùng `src/` (Root-level)**
+
+```
+my-app/
+├── app/              # Code ứng dụng
+│   ├── page.js
+│   └── layout.js
+├── components/       # Code ứng dụng
+├── public/           # Static files
+├── package.json      # Config
+├── next.config.js    # Config
+└── README.md         # Config
+```
+
+**Đặc điểm:**
+- Thư mục `app/` và `components/` nằm **cùng cấp** với các file config (`package.json`, `next.config.js`).
+- Code ứng dụng và config files **trộn lẫn** với nhau.
+
+---
+
+##### **Option 2: Dùng `src/` (Recommended)**
+
+```
+my-app/
+├── src/              # ← TẤT CẢ code ứng dụng nằm đây
+│   ├── app/          # Routing
+│   │   ├── page.js
+│   │   └── layout.js
+│   ├── components/   # Components
+│   └── lib/          # Utilities
+├── public/           # Static files
+├── package.json      # Config
+├── next.config.js    # Config
+└── README.md         # Config
+```
+
+**Đặc điểm:**
+- Thư mục `src/` chứa **TẤT CẢ** code ứng dụng (`app/`, `components/`, `lib/`).
+- Code ứng dụng **tách biệt** với config files.
+- Root directory chỉ chứa config files và `public/`.
+
+---
+
+##### So sánh: `src/` vs Root-level
+
+| Tiêu chí | Không dùng `src/` | Dùng `src/` (✅ Khuyên dùng) |
+|---|---|---|
+| **Tổ chức** | Code và config trộn lẫn | Code tách biệt với config |
+| **Dễ tìm file** | ❌ Khó (nhiều folder ở root) | ✅ Dễ (chỉ vào `src/` là thấy code) |
+| **Quy ước** | Ít phổ biến | ✅ Chuẩn trong React/Node.js |
+| **Khi nào dùng?** | Project nhỏ, cá nhân | ✅ Project team, production |
+
+---
+
+##### Tại sao nên dùng `src/`?
+
+**1. Tách biệt rõ ràng (Separation of Concerns)**
+- **Code ứng dụng** (business logic) → `src/`
+- **Config files** (setup, dependencies) → Root
+
+**Mental Model:** Tủ quần áo
+- `src/` = Ngăn chứa quần áo (code)
+- Root = Nhãn dán bên ngoài tủ (config)
+
+**2. Dễ navigate**
+Khi mở project, bạn biết ngay:
+- Muốn sửa code → Vào `src/`
+- Muốn config → Xem root
+
+**3. Quy ước chuẩn**
+Hầu hết React projects (Create React App, Vite) đều dùng `src/`.
+
+**4. Tránh nhầm lẫn**
+Không dùng `src/`:
+```
+my-app/
+├── app/           # ← Code hay config?
+├── components/    # ← Code hay config?
+├── lib/           # ← Code hay config?
+├── public/        # ← Static files
+├── package.json   # ← Config
+```
+
+Dùng `src/`:
+```
+my-app/
+├── src/           # ← 100% code ở đây!
+├── public/        # ← Static files
+├── package.json   # ← Config
+```
+
+---
+
+##### Khi nào KHÔNG cần `src/`?
+
+- ✅ Project cá nhân, nhỏ (< 10 files)
+- ✅ Đang học Next.js lần đầu (ít folder hơn, đơn giản hơn)
+- ✅ Muốn setup nhanh, không quan tâm cấu trúc
+
+**Lưu ý:** Bạn có thể bắt đầu không dùng `src/`, sau này dễ dàng chuyển sang dùng `src/` khi project lớn lên.
+
+---
+
+##### Tóm tắt
+
+> **Khuyến nghị:** Chọn **Yes** cho `src/` directory nếu bạn làm project nghiêm túc hoặc làm việc nhóm. Chọn **No** nếu chỉ học thử hoặc làm project nhỏ.
+
+**Quy tắc vàng:** Khi nghi ngờ, chọn **Yes** (dùng `src/`). Nó giúp project dễ maintain hơn về lâu dài.
+
+#### Chạy development server
+
+```bash
+cd my-app
+npm run dev
+```
+
+Mở trình duyệt: `http://localhost:3000`
+
+---
+
+### 2. Cấu trúc thư mục (App Router)
+
+```
+my-app/
+├── src/
+│   ├── app/                 # Routing chính (mỗi folder = 1 route)
+│   │   ├── layout.js        # Layout chung cho toàn app
+│   │   ├── page.js          # Trang chủ (/)
+│   │   ├── about/
+│   │   │   └── page.js      # Trang /about
+│   │   └── blog/
+│   │       ├── page.js      # Trang /blog
+│   │       └── [id]/
+│   │           └── page.js  # Dynamic route: /blog/123
+│   ├── components/          # Các component tái sử dụng
+│   └── lib/                 # Utility functions, helpers
+├── public/                  # Static files (images, fonts)
+├── package.json
+└── next.config.js           # Config Next.js
+```
+
+**Quy tắc vàng:**
+- **`page.js`**: Định nghĩa một trang (route).
+- **`layout.js`**: Định nghĩa layout bao quanh các trang con.
+- **`loading.js`**: UI hiển thị khi đang tải.
+- **`error.js`**: UI hiển thị khi có lỗi.
+
+---
+
+### 3. Server Components vs Client Components
+
+Đây là **khái niệm mới nhất** và quan trọng nhất của Next.js App Router.
+
+#### Mental Model: Nhà hàng
+
+| Loại | Nơi chạy | Ẩn dụ | Khi nào dùng? |
+|---|---|---|---|
+| **Server Component** | Server (Node.js) | **Bếp** - Nấu xong mới đưa ra | Fetch data, SEO, không cần interactivity |
+| **Client Component** | Browser (JavaScript) | **Bàn ăn** - Khách tự phục vụ | Event handlers, useState, useEffect |
+
+#### 3.1. Server Component (Mặc định)
+
+**Đặc điểm:**
+- ✅ Chạy trên server, gửi HTML về browser.
+- ✅ Có thể truy cập database trực tiếp.
+- ✅ Không tăng bundle size JavaScript cho client.
+- ❌ **KHÔNG** dùng được `useState`, `useEffect`, event handlers.
+
+**Ví dụ: Fetch data từ API**
+
+```jsx
+// src/app/posts/page.js
+// Đây là Server Component (mặc định, không cần khai báo gì)
+
+async function getPosts() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts');
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+}
+
+export default async function PostsPage() {
+  const posts = await getPosts();  // Fetch data trực tiếp trong component!
+
+  return (
+    <div>
+      <h1>Blog Posts</h1>
+      <ul>
+        {posts.slice(0, 10).map(post => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Điểm đặc biệt:**
+- Component là `async function` - điều này **KHÔNG THỂ** làm trong React thuần!
+- Fetch data ngay trong component, không cần `useEffect`.
+- Data được fetch trên server → HTML hoàn chỉnh gửi về browser → SEO tốt.
+
+---
+
+#### 3.2. Client Component
+
+**Khi nào cần Client Component?**
+- ✅ Cần `useState`, `useEffect`, `useContext`.
+- ✅ Cần event handlers (`onClick`, `onChange`).
+- ✅ Cần browser APIs (`window`, `localStorage`).
+- ✅ Cần thư viện chỉ chạy trên browser.
+
+**Cách khai báo:** Thêm `'use client'` ở đầu file.
+
+**Ví dụ: Counter với useState**
+
+```jsx
+// src/components/Counter.js
+'use client';  // Bắt buộc phải có dòng này!
+
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Tăng
+      </button>
+    </div>
+  );
+}
+```
+
+**Quy tắc quan trọng:**
+- Server Component có thể import Client Component.
+- Client Component **KHÔNG THỂ** import Server Component.
+
+---
+
+#### 3.3. Kết hợp Server và Client Components: Sức mạnh thực sự của Next.js
+
+**Câu hỏi quan trọng:** Next.js có phải là Server Component hay Client Component?
+
+**Trả lời:** Next.js **KHÔNG PHẢI** chỉ là một trong hai. Nó là framework cho phép bạn **kết hợp cả hai** một cách thông minh trong cùng một ứng dụng.
+
+> **Mental Model: Tòa nhà**  
+> - **Kết cấu bê tông (Server Components)**: Tường, sàn, cột → Cứng, không đổi, xây sẵn trên server  
+> - **Đồ nội thất (Client Components)**: Cửa, công tắc đèn, tủ lạnh → Có thể tương tác, cần JavaScript  
+> - **Next.js = Tòa nhà hoàn chỉnh** (có cả kết cấu và nội thất)
+
+##### Ví dụ thực tế: Trang Blog Post
+
+Một trang blog điển hình sẽ có:
+- **Nội dung bài viết** (Server Component) - Không cần JS, SEO tốt
+- **Nút Like** (Client Component) - Cần `useState` và `onClick`
+- **Form Comment** (Client Component) - Cần `useState` cho input
+
+**Code minh họa:**
+
+```jsx
+// src/app/blog/[id]/page.js
+// ĐÂY LÀ SERVER COMPONENT (mặc định)
+
+import CommentForm from '@/components/CommentForm';  // Client Component
+import LikeButton from '@/components/LikeButton';    // Client Component
+
+// Fetch data trên server (SEO tốt, nhanh)
+async function getPost(id) {
+  const res = await fetch(`https://api.example.com/posts/${id}`);
+  if (!res.ok) throw new Error('Post not found');
+  return res.json();
+}
+
+export default async function BlogPostPage({ params }) {
+  const post = await getPost(params.id);  // Server-side fetch
+
+  return (
+    <article>
+      {/* ===== PHẦN SERVER COMPONENT ===== */}
+      {/* Không cần JS, SEO tốt, load nhanh */}
+      <h1>{post.title}</h1>
+      <p className="author">By {post.author}</p>
+      <p className="date">{new Date(post.createdAt).toLocaleDateString('vi-VN')}</p>
+      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+      
+      {/* ===== PHẦN CLIENT COMPONENT ===== */}
+      {/* Cần tương tác, dùng useState */}
+      <LikeButton postId={post.id} initialLikes={post.likes} />
+      
+      <hr />
+      
+      {/* Form cần useState và onChange */}
+      <CommentForm postId={post.id} />
+    </article>
+  );
+}
+```
+
+```jsx
+// src/components/LikeButton.js
+'use client';  // Client Component
+
+import { useState } from 'react';
+
+export default function LikeButton({ postId, initialLikes }) {
+  const [likes, setLikes] = useState(initialLikes);
+  const [isLiked, setIsLiked] = useState(false);
+
+  const handleLike = async () => {
+    setIsLiked(!isLiked);
+    setLikes(isLiked ? likes - 1 : likes + 1);
+    
+    // Gọi API để lưu like
+    await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+  };
+
+  return (
+    <button 
+      onClick={handleLike}
+      style={{ 
+        fontSize: '20px', 
+        border: 'none', 
+        background: 'transparent',
+        cursor: 'pointer'
+      }}
+    >
+      {isLiked ? '❤️' : '🤍'} {likes} likes
+    </button>
+  );
+}
+```
+
+```jsx
+// src/components/CommentForm.js
+'use client';
+
+import { useState } from 'react';
+
+export default function CommentForm({ postId }) {
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    await fetch(`/api/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ comment }),
+    });
+    
+    setComment('');
+    setIsSubmitting(false);
+    alert('Comment đã được gửi!');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h3>Để lại bình luận</h3>
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Nhập bình luận của bạn..."
+        rows={4}
+        style={{ width: '100%', padding: '10px' }}
+      />
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Đang gửi...' : 'Gửi bình luận'}
+      </button>
+    </form>
+  );
+}
+```
+
+##### Phân tích: Tại sao kết hợp?
+
+| Phần | Loại Component | Lý do |
+|---|---|---|
+| **Title, Author, Content** | Server Component | ✅ Không cần JS, SEO tốt, load nhanh |
+| **Like Button** | Client Component | ✅ Cần `useState` và `onClick` |
+| **Comment Form** | Client Component | ✅ Cần `useState` cho input và submit |
+
+##### Lợi ích của việc kết hợp
+
+**1. Performance tối ưu**
+- Server Components → Không tăng bundle size JavaScript (nội dung tĩnh không cần JS)
+- Client Components → Chỉ tải JS cho phần cần tương tác (buttons, forms)
+
+**2. SEO tốt**
+- Nội dung chính (text, images) render trên server → Google đọc được ngay
+- Phần tương tác (buttons) không ảnh hưởng SEO
+
+**3. Developer Experience tốt**
+- Fetch data trực tiếp trong Server Component (không cần `useEffect`)
+- Dùng hooks thoải mái trong Client Component khi cần
+
+**4. Security tốt hơn**
+- API keys, database queries chỉ chạy trên server (Server Components)
+- Không bao giờ lộ ra browser
+
+##### Quy tắc Composition (Kết hợp)
+
+**✅ QUY TẮC 1: Server Component có thể import Client Component**
+
+```jsx
+// ✅ ĐÚNG: Server Component import Client Component
+// src/app/page.js (Server Component)
+
+import ClientButton from '@/components/ClientButton';  // ✅ OK
+
+export default function HomePage() {
+  return (
+    <div>
+      <h1>Welcome</h1>  {/* Server-rendered */}
+      <ClientButton />   {/* Client-rendered */}
+    </div>
+  );
+}
+```
+
+---
+
+**❌ QUY TẮC 2: Client Component KHÔNG THỂ import Server Component**
+
+```jsx
+// ❌ SAI: Client Component import Server Component
+// src/components/ClientWrapper.js
+'use client';
+
+import ServerData from './ServerData';  // ❌ LỖI!
+
+export default function ClientWrapper() {
+  return <ServerData />;  // ❌ Không hoạt động
+}
+```
+
+**Lý do:** Client Component chạy trên browser, không thể chạy code server (database queries, file system).
+
+---
+
+**✅ GIẢI PHÁP: Dùng `children` prop (Composition Pattern)**
+
+Thay vì import trực tiếp, hãy **truyền Server Component qua `children`**:
+
+```jsx
+// ✅ ĐÚNG: Server Component pass vào Client Component qua children
+// src/app/page.js (Server Component)
+
+import ClientWrapper from '@/components/ClientWrapper';  // Client
+import ServerData from '@/components/ServerData';        // Server
+
+export default function Page() {
+  return (
+    <ClientWrapper>
+      {/* ✅ Pass Server Component qua children */}
+      <ServerData />
+    </ClientWrapper>
+  );
+}
+```
+
+```jsx
+// src/components/ClientWrapper.js
+'use client';
+
+import { useState } from 'react';
+
+export default function ClientWrapper({ children }) {
+  const [isOpen, setIsOpen] = useState(true);
+  
+  return (
+    <div>
+      <button onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? 'Ẩn' : 'Hiện'}
+      </button>
+      
+      {/* ✅ Render Server Component được pass vào */}
+      {isOpen && children}
+    </div>
+  );
+}
+```
+
+```jsx
+// src/components/ServerData.js
+// Server Component (mặc định)
+
+async function getData() {
+  const res = await fetch('https://api.example.com/data');
+  return res.json();
+}
+
+export default async function ServerData() {
+  const data = await getData();
+  
+  return (
+    <div>
+      <h2>Server Data</h2>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  );
+}
+```
+
+**Giải thích:**
+- `ClientWrapper` không import `ServerData` trực tiếp.
+- `ServerData` được render ở Server, kết quả (HTML) được pass vào `ClientWrapper` qua `children`.
+- `ClientWrapper` chỉ cần toggle hiển thị HTML đó (không cần biết nó từ đâu).
+
+##### Bảng tóm tắt: Quy tắc Composition
+
+| Tình huống | Có được phép? | Cách làm |
+|---|---|---|
+| Server → Client | ✅ Có | Import trực tiếp |
+| Client → Server | ❌ Không | Dùng `children` prop |
+| Server → Server | ✅ Có | Import trực tiếp |
+| Client → Client | ✅ Có | Import trực tiếp |
+
+##### Khi nào dùng Server, khi nào dùng Client?
+
+**Dùng Server Component khi:**
+- ✅ Fetch data từ database/API
+- ✅ Cần SEO (blog posts, product pages)
+- ✅ Hiển thị nội dung tĩnh (text, images)
+- ✅ Dùng API keys/secrets (bảo mật)
+
+**Dùng Client Component khi:**
+- ✅ Cần `useState`, `useEffect`, `useContext`
+- ✅ Cần event handlers (`onClick`, `onChange`, `onSubmit`)
+- ✅ Cần browser APIs (`window`, `localStorage`, `navigator`)
+- ✅ Cần thư viện chỉ chạy trên browser (charts, animations)
+
+**Quy tắc vàng:** **Mặc định dùng Server Component**. Chỉ chuyển sang Client Component khi thực sự cần tương tác.
+
+##### Tóm tắt
+
+> **Next.js = React + Server Components + Client Components + Routing + API Routes + Deployment**
+
+Next.js cho phép bạn:
+1. Viết **Server Components** để tối ưu performance và SEO
+2. Viết **Client Components** khi cần tương tác
+3. **Kết hợp cả hai** một cách linh hoạt trong cùng một app
+
+**Đây chính là "Best of Both Worlds" - sức mạnh thực sự của Next.js!** 🚀
+
+---
+
+### 4. Routing: File-based Routing
+
+Next.js dùng **cấu trúc thư mục** để tạo routes tự động.
+
+#### 4.1. Static Routes
+
+| File Path | URL | Ví dụ |
+|---|---|---|
+| `app/page.js` | `/` | Trang chủ |
+| `app/about/page.js` | `/about` | Trang giới thiệu |
+| `app/blog/page.js` | `/blog` | Danh sách blog |
+| `app/contact/page.js` | `/contact` | Liên hệ |
+
+#### 4.2. Dynamic Routes
+
+Dùng `[tên_biến]` để tạo route động.
+
+**Ví dụ: Blog post detail**
+
+```
+app/
+└── blog/
+    └── [id]/
+        └── page.js  → URL: /blog/123, /blog/456, ...
+```
+
+**Code:**
+
+```jsx
+// src/app/blog/[id]/page.js
+
+async function getPost(id) {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+  if (!res.ok) throw new Error('Post not found');
+  return res.json();
+}
+
+export default async function BlogPost({ params }) {
+  // params.id = "123" (lấy từ URL)
+  const post = await getPost(params.id);
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <p>{post.body}</p>
+    </article>
+  );
+}
+```
+
+**Truy cập:** `http://localhost:3000/blog/5` → `params.id = "5"`
+
+---
+
+#### 4.3. Navigation: Link Component
+
+```jsx
+import Link from 'next/link';
+
+export default function Navbar() {
+  return (
+    <nav>
+      <Link href="/">Trang chủ</Link>
+      <Link href="/about">Giới thiệu</Link>
+      <Link href="/blog">Blog</Link>
+    </nav>
+  );
+}
+```
+
+**Lưu ý:** Dùng `Link` thay vì `<a>` để có client-side navigation (không reload trang).
+
+---
+
+### 5. Data Fetching: 3 Chiến lược
+
+Next.js hỗ trợ 3 cách render trang, mỗi cách phù hợp với một use case.
+
+#### 5.1. SSR - Server-Side Rendering (Dynamic)
+
+**Khi nào dùng:** Dữ liệu thay đổi liên tục (giá cổ phiếu, tin tức mới nhất).
+
+**Cơ chế:** Mỗi request → Server fetch data mới → Render HTML → Gửi về browser.
+
+```jsx
+// src/app/stocks/page.js
+
+async function getStocks() {
+  const res = await fetch('https://api.example.com/stocks', {
+    cache: 'no-store'  // Không cache, luôn fetch mới
+  });
+  return res.json();
+}
+
+export default async function StocksPage() {
+  const stocks = await getStocks();
+  
+  return (
+    <div>
+      <h1>Giá cổ phiếu (Real-time)</h1>
+      {stocks.map(stock => (
+        <div key={stock.id}>
+          {stock.name}: ${stock.price}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+#### 5.2. SSG - Static Site Generation (Static)
+
+**Khi nào dùng:** Dữ liệu ít thay đổi (blog posts, documentation).
+
+**Cơ chế:** Build time → Fetch data 1 lần → Tạo HTML tĩnh → Serve HTML cho mọi request.
+
+```jsx
+// src/app/docs/page.js
+
+async function getDocs() {
+  const res = await fetch('https://api.example.com/docs', {
+    cache: 'force-cache'  // Cache vĩnh viễn
+  });
+  return res.json();
+}
+
+export default async function DocsPage() {
+  const docs = await getDocs();
+  
+  return (
+    <div>
+      <h1>Documentation</h1>
+      {docs.map(doc => (
+        <article key={doc.id}>
+          <h2>{doc.title}</h2>
+          <p>{doc.content}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+```
+
+**Build command:**
+
+```bash
+npm run build  # Tạo HTML tĩnh
+npm start      # Serve HTML tĩnh
+```
+
+---
+
+#### 5.3. ISR - Incremental Static Regeneration (Hybrid)
+
+**Khi nào dùng:** Dữ liệu thay đổi định kỳ (mỗi 1 giờ, mỗi ngày).
+
+**Cơ chế:** Tạo HTML tĩnh → Sau X giây → Tự động regenerate HTML mới.
+
+```jsx
+// src/app/products/page.js
+
+async function getProducts() {
+  const res = await fetch('https://api.example.com/products', {
+    next: { revalidate: 3600 }  // Regenerate mỗi 1 giờ (3600 giây)
+  });
+  return res.json();
+}
+
+export default async function ProductsPage() {
+  const products = await getProducts();
+  
+  return (
+    <div>
+      <h1>Sản phẩm</h1>
+      {products.map(product => (
+        <div key={product.id}>
+          <h2>{product.name}</h2>
+          <p>${product.price}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Timeline:**
+1. User A truy cập → HTML tĩnh (cũ) được serve ngay lập tức.
+2. Sau 1 giờ, User B truy cập → HTML tĩnh (cũ) vẫn được serve, nhưng Next.js bắt đầu regenerate ở background.
+3. User C truy cập → HTML mới được serve.
+
+---
+
+#### So sánh 3 chiến lược
+
+| Chiến lược | Khi fetch data? | Performance | Use case |
+|---|---|---|---|
+| **SSR** | Mỗi request | Chậm hơn | Real-time data |
+| **SSG** | Build time | Cực nhanh | Static content |
+| **ISR** | Build + định kỳ | Nhanh | Semi-static content |
+
+---
+
+### 6. Layout và Metadata
+
+#### 6.1. Root Layout (Bắt buộc)
+
+```jsx
+// src/app/layout.js
+
+export const metadata = {
+  title: 'My Next.js App',
+  description: 'A production-ready React app',
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="vi">
+      <body>
+        <header>
+          <nav>
+            {/* Navigation */}
+          </nav>
+        </header>
+        
+        <main>{children}</main>
+        
+        <footer>
+          <p>&copy; 2026 My App</p>
+        </footer>
+      </body>
+    </html>
+  );
+}
+```
+
+**Đặc điểm:**
+- `children` = nội dung của `page.js`.
+- Layout này bao quanh **TẤT CẢ** các trang.
+
+---
+
+#### 6.2. Nested Layout
+
+```jsx
+// src/app/blog/layout.js
+
+export default function BlogLayout({ children }) {
+  return (
+    <div style={{ display: 'flex' }}>
+      {/* Sidebar chỉ hiện trong /blog/* */}
+      <aside style={{ width: '200px' }}>
+        <h3>Categories</h3>
+        <ul>
+          <li>Tech</li>
+          <li>Lifestyle</li>
+        </ul>
+      </aside>
+      
+      <div style={{ flex: 1 }}>
+        {children}  {/* Nội dung của /blog/page.js hoặc /blog/[id]/page.js */}
+      </div>
+    </div>
+  );
+}
+```
+
+**Kết quả:** Sidebar chỉ hiện ở `/blog` và `/blog/123`, không hiện ở `/about`.
+
+---
+
+### 7. API Routes: Backend Built-in
+
+#### 7.0. Kiến thức nền tảng về API
+
+##### A. API là gì?
+
+**API (Application Programming Interface)** là cách để các ứng dụng "nói chuyện" với nhau.
+
+**Mental Model: Nhà hàng**
+- **Khách hàng (Frontend):** Bạn ngồi ở bàn, muốn gọi món.
+- **Thực đơn (API Documentation):** Danh sách món ăn bạn có thể gọi.
+- **Người phục vụ (API):** Nhận yêu cầu của bạn, chuyển cho bếp, mang món ra.
+- **Bếp (Backend/Database):** Nơi thực sự nấu món ăn (xử lý logic, lấy data).
+
+**Ví dụ thực tế:**
+```javascript
+// Frontend gọi API
+fetch('https://api.example.com/users')  // ← Gọi món "danh sách users"
+  .then(res => res.json())
+  .then(users => console.log(users));   // ← Nhận món (data)
+```
+
+**Tại sao cần API?**
+- ✅ **Tách biệt Frontend và Backend:** Frontend không cần biết database là gì, chỉ cần gọi API.
+- ✅ **Tái sử dụng:** Cùng 1 API có thể dùng cho web, mobile app, desktop app.
+- ✅ **Bảo mật:** Database không public, chỉ API được phép truy cập.
+
+---
+
+##### B. REST API là gì?
+
+**REST (Representational State Transfer)** là một kiến trúc thiết kế API phổ biến nhất.
+
+**Nguyên tắc cốt lõi:**
+1. **Mỗi resource có một URL duy nhất**
+   - Users: `/api/users`
+   - User cụ thể: `/api/users/5`
+   - Posts của user: `/api/users/5/posts`
+
+2. **Dùng HTTP Methods để thao tác**
+   - `GET`: Lấy data (Read)
+   - `POST`: Tạo mới (Create)
+   - `PATCH/PUT`: Cập nhật (Update)
+   - `DELETE`: Xóa (Delete)
+
+**Ví dụ CRUD (Create, Read, Update, Delete):**
+
+| Hành động | HTTP Method | URL | Body |
+|---|---|---|---|
+| Lấy tất cả users | `GET` | `/api/users` | Không |
+| Lấy user ID 5 | `GET` | `/api/users/5` | Không |
+| Tạo user mới | `POST` | `/api/users` | `{ name: "An" }` |
+| Cập nhật user 5 | `PATCH` | `/api/users/5` | `{ name: "Bình" }` |
+| Xóa user 5 | `DELETE` | `/api/users/5` | Không |
+
+---
+
+##### C. HTTP Methods chi tiết
+
+###### 1. GET - Lấy dữ liệu
+
+```javascript
+// Client gọi
+fetch('https://api.example.com/users')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// Server trả về
+// Status: 200 OK
+// Body: [{ id: 1, name: "An" }, { id: 2, name: "Bình" }]
+```
+
+**Đặc điểm:**
+- ✅ Không thay đổi data trên server (Safe)
+- ✅ Có thể cache
+- ✅ Có thể bookmark URL
+- ❌ Không nên gửi data nhạy cảm qua URL
+
+---
+
+###### 2. POST - Tạo mới
+
+```javascript
+// Client gọi
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: "Cường", age: 30 })
+})
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// Server trả về
+// Status: 201 Created
+// Body: { id: 3, name: "Cường", age: 30 }
+```
+
+**Đặc điểm:**
+- ✅ Tạo resource mới
+- ✅ Gửi data qua body (an toàn hơn URL)
+- ❌ Không cache
+
+---
+
+###### 3. PATCH/PUT - Cập nhật
+
+```javascript
+// PATCH: Cập nhật một phần
+fetch('https://api.example.com/users/3', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ age: 31 })  // Chỉ update age
+});
+
+// PUT: Thay thế toàn bộ
+fetch('https://api.example.com/users/3', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: "Cường", age: 31 })  // Phải gửi đầy đủ
+});
+```
+
+**Sự khác biệt:**
+- **PATCH:** Cập nhật một vài field → Linh hoạt hơn
+- **PUT:** Thay thế toàn bộ object → Ít dùng hơn
+
+---
+
+###### 4. DELETE - Xóa
+
+```javascript
+fetch('https://api.example.com/users/3', {
+  method: 'DELETE'
+});
+
+// Server trả về
+// Status: 204 No Content (hoặc 200 OK)
+```
+
+---
+
+##### D. API trong React vs Next.js
+
+###### React thuần (Client-side API calls)
+
+```jsx
+// React Component
+import { useState, useEffect } from 'react';
+
+function Users() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    // Gọi API từ browser
+    fetch('https://api.example.com/users')
+      .then(res => res.json())
+      .then(data => setUsers(data));
+  }, []);
+
+  return (
+    <ul>
+      {users.map(user => <li key={user.id}>{user.name}</li>)}
+    </ul>
+  );
+}
+```
+
+**Đặc điểm:**
+- ❌ API call chạy trên **browser** (client-side)
+- ❌ Người dùng thấy loading spinner
+- ❌ Không tốt cho SEO (Google bot không đợi API)
+- ❌ API keys bị lộ (nếu gọi API cần authentication)
+
+---
+
+###### Next.js Server Components (Server-side API calls)
+
+```jsx
+// Next.js Server Component
+async function getUsers() {
+  const res = await fetch('https://api.example.com/users');
+  return res.json();
+}
+
+export default async function UsersPage() {
+  const users = await getUsers();  // Chạy trên server!
+
+  return (
+    <ul>
+      {users.map(user => <li key={user.id}>{user.name}</li>)}
+    </ul>
+  );
+}
+```
+
+**Đặc điểm:**
+- ✅ API call chạy trên **server** (server-side)
+- ✅ HTML đã có data khi gửi về browser → Không loading
+- ✅ Tốt cho SEO
+- ✅ Có thể dùng API keys an toàn (không lộ ra browser)
+
+---
+
+##### E. API Routes trong Next.js
+
+**API Routes** cho phép bạn tạo backend API ngay trong Next.js project, không cần server riêng (Express, Node.js).
+
+**Mental Model: Nhà hàng tự phục vụ**
+- Trước đây: Frontend (nhà hàng) + Backend riêng (bếp ở tòa nhà khác)
+- Next.js: Frontend + Backend cùng 1 chỗ (bếp ngay trong nhà hàng)
+
+**Cấu trúc thư mục:**
+
+```
+src/app/
+├── page.js              → Frontend: http://localhost:3000/
+├── about/page.js        → Frontend: http://localhost:3000/about
+└── api/                 → Backend API
+    ├── users/
+    │   └── route.js     → API: http://localhost:3000/api/users
+    └── posts/
+        └── route.js     → API: http://localhost:3000/api/posts
+```
+
+**Quy tắc:**
+- File trong `app/api/` → Tạo API endpoint
+- File phải tên `route.js` (hoặc `route.ts`)
+- Export các hàm: `GET`, `POST`, `PATCH`, `DELETE`
+
+---
+
+##### F. Endpoint là gì?
+
+**Endpoint** là một URL cụ thể mà bạn có thể gọi để lấy/gửi data.
+
+**Ví dụ:**
+```
+https://api.example.com/users       ← Endpoint 1
+https://api.example.com/users/5     ← Endpoint 2
+https://api.example.com/posts       ← Endpoint 3
+```
+
+**Mental Model: Địa chỉ nhà**
+- API = Khu phố
+- Endpoint = Địa chỉ cụ thể của từng ngôi nhà
+
+---
+
+##### G. Static vs Dynamic API Routes
+
+###### 1. Static API Route (URL cố định)
+
+**Ví dụ:** `/api/users` - Luôn trả về danh sách tất cả users
+
+```
+File: src/app/api/users/route.js
+URL:  http://localhost:3000/api/users
+```
+
+**Đặc điểm:**
+- ✅ URL không thay đổi
+- ✅ Dùng cho: Danh sách, tổng quan, thống kê chung
+
+---
+
+###### 2. Dynamic API Route (URL có tham số)
+
+**Ví dụ:** `/api/users/[id]` - Trả về user cụ thể theo ID
+
+```
+File: src/app/api/users/[id]/route.js
+URL:  http://localhost:3000/api/users/5
+      http://localhost:3000/api/users/123
+      http://localhost:3000/api/users/abc
+```
+
+**Cách hoạt động:**
+- `[id]` = Placeholder (biến)
+- Next.js tự động extract giá trị từ URL
+- Bạn nhận được qua `params.id`
+
+**So sánh:**
+
+| Loại | File Path | URL | Khi nào dùng |
+|---|---|---|---|
+| **Static** | `api/users/route.js` | `/api/users` | Lấy danh sách |
+| **Dynamic** | `api/users/[id]/route.js` | `/api/users/5` | Lấy 1 item cụ thể |
+| **Nested Dynamic** | `api/users/[id]/posts/[postId]/route.js` | `/api/users/5/posts/10` | Lấy post 10 của user 5 |
+
+**Ví dụ thực tế:**
+
+```javascript
+// Static Route
+// File: src/app/api/products/route.js
+export async function GET() {
+  const products = await db.products.findAll();
+  return Response.json(products);
+}
+// URL: /api/products → Tất cả sản phẩm
+
+// Dynamic Route
+// File: src/app/api/products/[id]/route.js
+export async function GET(request, { params }) {
+  const product = await db.products.findById(params.id);
+  return Response.json(product);
+}
+// URL: /api/products/42 → Sản phẩm ID 42
+```
+
+---
+
+##### H. Request và Response trong API Routes
+
+###### 1. Request Object
+
+```javascript
+export async function POST(request) {
+  // 1. Lấy body (JSON)
+  const body = await request.json();
+  
+  // 2. Lấy query params (?search=abc)
+  const searchParams = request.nextUrl.searchParams;
+  const query = searchParams.get('search');
+  
+  // 3. Lấy headers
+  const token = request.headers.get('authorization');
+  
+  console.log({ body, query, token });
+  
+  return Response.json({ success: true });
+}
+```
+
+**Ví dụ gọi:**
+```javascript
+fetch('/api/users?search=An', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer abc123'
+  },
+  body: JSON.stringify({ name: 'An', age: 25 })
+});
+
+// Server nhận:
+// body = { name: 'An', age: 25 }
+// query = 'An'
+// token = 'Bearer abc123'
+```
+
+---
+
+###### 2. Response Object
+
+```javascript
+export async function GET() {
+  // 1. Trả về JSON (cách phổ biến nhất)
+  return Response.json({ message: 'Hello' });
+  
+  // 2. Trả về với status code tùy chỉnh
+  return Response.json(
+    { error: 'Not found' },
+    { status: 404 }
+  );
+  
+  // 3. Trả về với headers tùy chỉnh
+  return Response.json(
+    { data: [...] },
+    {
+      status: 200,
+      headers: {
+        'Cache-Control': 'max-age=3600',
+        'X-Custom-Header': 'value'
+      }
+    }
+  );
+}
+```
+
+**HTTP Status Codes phổ biến:**
+
+| Code | Ý nghĩa | Khi nào dùng |
+|---|---|---|
+| **200** | OK | Request thành công (GET, PATCH, DELETE) |
+| **201** | Created | Tạo mới thành công (POST) |
+| **204** | No Content | Xóa thành công, không trả data |
+| **400** | Bad Request | Client gửi data sai format |
+| **401** | Unauthorized | Chưa đăng nhập |
+| **403** | Forbidden | Không có quyền truy cập |
+| **404** | Not Found | Resource không tồn tại |
+| **500** | Internal Server Error | Lỗi server (bug trong code) |
+
+---
+
+##### I. Tóm tắt: Luồng hoạt động của API
+
+```
+┌─────────────┐                    ┌─────────────┐                    ┌─────────────┐
+│   Browser   │                    │  Next.js    │                    │  Database   │
+│  (Client)   │                    │ API Route   │                    │             │
+└─────────────┘                    └─────────────┘                    └─────────────┘
+      │                                    │                                  │
+      │  1. fetch('/api/users')            │                                  │
+      │───────────────────────────────────>│                                  │
+      │                                    │                                  │
+      │                                    │  2. Query database               │
+      │                                    │─────────────────────────────────>│
+      │                                    │                                  │
+      │                                    │  3. Return data                  │
+      │                                    │<─────────────────────────────────│
+      │                                    │                                  │
+      │  4. Response.json(users)           │                                  │
+      │<───────────────────────────────────│                                  │
+      │                                    │                                  │
+      │  5. Display data                   │                                  │
+      │                                    │                                  │
+```
+
+**Các bước:**
+1. **Client gửi request** → URL + HTTP Method + Body (nếu có)
+2. **API Route nhận request** → Xử lý logic (query database, validate, etc.)
+3. **Database trả data** → API Route nhận kết quả
+4. **API Route trả response** → JSON + Status Code
+5. **Client nhận response** → Hiển thị data hoặc xử lý lỗi
+
+---
+
+#### 7.1. Ví dụ thực hành: API CRUD hoàn chỉnh
+
+##### Static Route: Danh sách users
+
+```javascript
+// src/app/api/users/route.js
+
+// Giả lập database
+let users = [
+  { id: 1, name: 'An', email: 'an@example.com' },
+  { id: 2, name: 'Bình', email: 'binh@example.com' },
+];
+
+// GET: Lấy tất cả users
+export async function GET(request) {
+  // Hỗ trợ search query: /api/users?search=An
+  const searchParams = request.nextUrl.searchParams;
+  const search = searchParams.get('search');
+  
+  let result = users;
+  if (search) {
+    result = users.filter(u => 
+      u.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+  
+  return Response.json(result);
+}
+
+// POST: Tạo user mới
+export async function POST(request) {
+  const body = await request.json();
+  
+  // Validation
+  if (!body.name || !body.email) {
+    return Response.json(
+      { error: 'Name and email are required' },
+      { status: 400 }
+    );
+  }
+  
+  // Tạo user mới
+  const newUser = {
+    id: users.length + 1,
+    name: body.name,
+    email: body.email
+  };
+  
+  users.push(newUser);
+  
+  return Response.json(newUser, { status: 201 });
+}
+```
+
+**Cách gọi từ Frontend:**
+
+```javascript
+// GET: Lấy tất cả users
+fetch('/api/users')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// GET: Search users
+fetch('/api/users?search=An')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// POST: Tạo user mới
+fetch('/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Cường', email: 'cuong@example.com' })
+})
+  .then(res => res.json())
+  .then(data => console.log(data));
+```
+
+---
+
+##### Dynamic Route: User cụ thể
+
+```javascript
+// src/app/api/users/[id]/route.js
+
+// Giả lập database (trong thực tế dùng chung với route.js ở trên)
+let users = [
+  { id: 1, name: 'An', email: 'an@example.com' },
+  { id: 2, name: 'Bình', email: 'binh@example.com' },
+];
+
+// GET: Lấy 1 user theo ID
+export async function GET(request, { params }) {
+  const userId = parseInt(params.id);
+  const user = users.find(u => u.id === userId);
+  
+  if (!user) {
+    return Response.json(
+      { error: 'User not found' },
+      { status: 404 }
+    );
+  }
+  
+  return Response.json(user);
+}
+
+// PATCH: Cập nhật user
+export async function PATCH(request, { params }) {
+  const userId = parseInt(params.id);
+  const body = await request.json();
+  
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    return Response.json(
+      { error: 'User not found' },
+      { status: 404 }
+    );
+  }
+  
+  // Cập nhật (chỉ các field được gửi lên)
+  users[userIndex] = {
+    ...users[userIndex],
+    ...body
+  };
+  
+  return Response.json(users[userIndex]);
+}
+
+// DELETE: Xóa user
+export async function DELETE(request, { params }) {
+  const userId = parseInt(params.id);
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    return Response.json(
+      { error: 'User not found' },
+      { status: 404 }
+    );
+  }
+  
+  users.splice(userIndex, 1);
+  
+  return Response.json(
+    { message: 'User deleted successfully' },
+    { status: 200 }
+  );
+}
+```
+
+**Cách gọi từ Frontend:**
+
+```javascript
+// GET: Lấy user ID 1
+fetch('/api/users/1')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// PATCH: Cập nhật user ID 1
+fetch('/api/users/1', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'An Nguyễn' })
+})
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// DELETE: Xóa user ID 1
+fetch('/api/users/1', {
+  method: 'DELETE'
+})
+  .then(res => res.json())
+  .then(data => console.log(data));
+```
+
+---
+
+#### 7.2. Ví dụ đơn giản hơn (cho người mới bắt đầu)
+
+##### Ví dụ: API trả về danh sách users
+
+```javascript
+// src/app/api/users/route.js
+
+export async function GET(request) {
+  const users = [
+    { id: 1, name: 'An' },
+    { id: 2, name: 'Bình' },
+  ];
+  
+  return Response.json(users);
+}
+
+export async function POST(request) {
+  const body = await request.json();
+  
+  // Lưu vào database (giả lập)
+  console.log('New user:', body);
+  
+  return Response.json({ success: true, data: body }, { status: 201 });
+}
+```
+
+**Truy cập:**
+- GET: `http://localhost:3000/api/users`
+- POST: `http://localhost:3000/api/users` (với body JSON)
+
+---
+
+#### Ví dụ: Dynamic API Route
+
+```javascript
+// src/app/api/users/[id]/route.js
+
+export async function GET(request, { params }) {
+  const userId = params.id;
+  
+  // Giả lập fetch từ database
+  const user = { id: userId, name: 'User ' + userId };
+  
+  return Response.json(user);
+}
+```
+
+**Truy cập:** `http://localhost:3000/api/users/5` → `{ id: "5", name: "User 5" }`
+
+---
+
+### 8. Loading và Error Handling
+
+#### 8.1. Loading UI
+
+```jsx
+// src/app/blog/loading.js
+
+export default function Loading() {
+  return (
+    <div>
+      <p>Đang tải dữ liệu...</p>
+      <div className="spinner"></div>
+    </div>
+  );
+}
+```
+
+**Cơ chế:** Khi `/blog` đang fetch data, Next.js tự động hiển thị `loading.js`.
+
+---
+
+#### 8.2. Error UI
+
+```jsx
+// src/app/blog/error.js
+'use client';  // Error components phải là Client Component
+
+export default function Error({ error, reset }) {
+  return (
+    <div>
+      <h2>Có lỗi xảy ra!</h2>
+      <p>{error.message}</p>
+      <button onClick={() => reset()}>Thử lại</button>
+    </div>
+  );
+}
+```
+
+**Cơ chế:** Nếu `page.js` throw error, Next.js hiển thị `error.js`.
+
+---
+
+### 9. Deployment: Vercel (1-Click Deploy)
+
+#### Bước 1: Push code lên GitHub
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/username/my-app.git
+git push -u origin main
+```
+
+#### Bước 2: Deploy lên Vercel
+
+1. Truy cập: [vercel.com](https://vercel.com)
+2. Đăng nhập bằng GitHub
+3. Click **"New Project"**
+4. Chọn repository `my-app`
+5. Click **"Deploy"**
+
+**Kết quả:** Sau 1-2 phút, app của bạn sẽ live tại `https://my-app.vercel.app`
+
+**Tự động deploy:** Mỗi lần push code lên GitHub → Vercel tự động deploy lại.
+
+---
+
+### 10. So sánh Next.js vs React thuần
+
+| Tính năng | React (CRA) | Next.js |
+|---|---|---|
+| **Routing** | Cần cài `react-router-dom` | ✅ Built-in, file-based |
+| **SEO** | ❌ Kém (CSR) | ✅ Tốt (SSR/SSG) |
+| **Performance** | Phải tự tối ưu | ✅ Tự động (code splitting, image optimization) |
+| **API Backend** | Cần server riêng (Express, Node.js) | ✅ API Routes built-in |
+| **Deployment** | Phức tạp | ✅ 1-click với Vercel |
+| **Learning Curve** | Dễ hơn | Khó hơn (nhiều khái niệm mới) |
+
+---
+
+### 11. Khi nào dùng Next.js?
+
+**✅ Dùng Next.js khi:**
+- Cần SEO tốt (blog, e-commerce, landing page).
+- Cần performance cao (SSG/ISR).
+- Muốn full-stack app (frontend + API backend).
+- Muốn deploy nhanh.
+
+**❌ Không cần Next.js khi:**
+- App nội bộ (không cần SEO).
+- Dashboard/Admin panel (ít người dùng).
+- Đang học React cơ bản (nên học React thuần trước).
+
+---
+
+### 12. Tài nguyên học thêm
+
+- **Official Docs:** [nextjs.org/docs](https://nextjs.org/docs)
+- **Tutorial:** [nextjs.org/learn](https://nextjs.org/learn)
+- **Examples:** [github.com/vercel/next.js/tree/canary/examples](https://github.com/vercel/next.js/tree/canary/examples)
+
+---
+
+## PHẦN 8: KIẾN THỨC BỔ SUNG ĐỂ HIỂU NEXT.JS
+
+### Giới thiệu
+
+Bạn đã học React rất tốt qua các phần trước. Tuy nhiên, để hiểu và viết Next.js code hiệu quả, bạn cần bổ sung thêm một số kiến thức về JavaScript nâng cao và web development. Phần này sẽ giúp bạn lấp đầy những khoảng trống đó.
+
+> **Tỷ lệ kiến thức:** Với React mastery từ tài liệu này, bạn đã có **~70%** kiến thức cần thiết. Phần 8 này sẽ bổ sung **30%** còn lại.
+
+---
+
+### 1. Async/Await: Xử lý bất đồng bộ ⭐⭐⭐
+
+**Tại sao quan trọng?** Next.js Server Components dùng `async/await` rất nhiều để fetch data.
+
+#### 1.1. Vấn đề: JavaScript là đơn luồng (Single-threaded)
+
+JavaScript chỉ có **1 luồng xử lý**. Nếu một tác vụ chậm (gọi API, đọc file) chạy đồng bộ → Toàn bộ chương trình bị "đóng băng".
+
+**Ví dụ sai (Đồng bộ - Blocking):**
+
+```javascript
+// Giả sử hàm này mất 5 giây
+function fetchData() {
+  // ... chờ 5 giây ...
+  return { name: "An" };
+}
+
+console.log("1. Bắt đầu");
+const data = fetchData();  // ← Chương trình đóng băng 5 giây ở đây!
+console.log("2. Data:", data);
+console.log("3. Kết thúc");
+
+// Output:
+// 1. Bắt đầu
+// ... (đợi 5 giây) ...
+// 2. Data: { name: "An" }
+// 3. Kết thúc
+```
+
+**Vấn đề:** Trong 5 giây đó, trình duyệt/server không làm gì được (UI đóng băng, không xử lý request khác).
+
+---
+
+#### 1.2. Giải pháp: Promise và Async/Await
+
+**Promise** là một object đại diện cho kết quả của một tác vụ bất đồng bộ trong tương lai.
+
+**Mental Model: Phiếu lấy số ở ngân hàng**
+- Bạn đến ngân hàng → Lấy phiếu số 42 (Promise)
+- Bạn ngồi chờ, làm việc khác (không đóng băng)
+- Khi đến lượt → Nhân viên gọi số 42 → Bạn nhận kết quả
+
+##### A. Promise Basics
+
+```javascript
+// Tạo một Promise
+const promise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const success = true;
+    if (success) {
+      resolve({ name: "An" });  // Thành công
+    } else {
+      reject(new Error("Failed"));  // Thất bại
+    }
+  }, 2000);  // 2 giây
+});
+
+// Sử dụng Promise (cách cũ - .then/.catch)
+promise
+  .then(data => console.log("Success:", data))
+  .catch(error => console.log("Error:", error));
+```
+
+##### B. Async/Await (Cách hiện đại - Dễ đọc hơn)
+
+```javascript
+// Hàm async tự động trả về Promise
+async function fetchUser() {
+  // await = "đợi Promise hoàn thành, nhưng không block code khác"
+  const response = await fetch('https://api.example.com/user/1');
+  const data = await response.json();
+  return data;
+}
+
+// Sử dụng
+async function main() {
+  console.log("1. Bắt đầu");
+  
+  const user = await fetchUser();  // Đợi kết quả
+  console.log("2. User:", user);
+  
+  console.log("3. Kết thúc");
+}
+
+main();
+```
+
+**Quy tắc:**
+- Hàm có `async` → Tự động trả về Promise
+- `await` chỉ dùng được trong hàm `async`
+- `await` = "tạm dừng" hàm này, nhưng không block toàn bộ chương trình
+
+---
+
+#### 1.3. Error Handling với try/catch
+
+```javascript
+async function fetchUserSafe() {
+  try {
+    const response = await fetch('https://api.example.com/user/1');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Lỗi khi fetch:", error.message);
+    return null;  // Trả về giá trị mặc định
+  }
+}
+```
+
+---
+
+#### 1.4. Async/Await trong Next.js
+
+**Server Component (Next.js):**
+
+```jsx
+// src/app/users/page.js
+// Component này là async function!
+
+async function getUsers() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/users');
+  if (!res.ok) throw new Error('Failed to fetch users');
+  return res.json();
+}
+
+export default async function UsersPage() {
+  const users = await getUsers();  // Fetch data trực tiếp!
+  
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Điểm khác biệt với React thuần:**
+- React thuần: Phải dùng `useEffect` + `useState`
+- Next.js Server Component: Dùng `async/await` trực tiếp trong component
+
+---
+
+#### 1.5. Bài tập thực hành
+
+**Bài 1:** Viết hàm `delay(ms)` trả về Promise chờ `ms` milliseconds:
+
+```javascript
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Sử dụng
+async function demo() {
+  console.log("Bắt đầu");
+  await delay(2000);  // Chờ 2 giây
+  console.log("Sau 2 giây");
+}
+```
+
+**Bài 2:** Fetch data từ API và xử lý lỗi:
+
+```javascript
+async function fetchPosts() {
+  try {
+    const res = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const posts = await res.json();
+    return posts.slice(0, 5);  // Lấy 5 posts đầu
+  } catch (error) {
+    console.error("Error:", error);
+    return [];
+  }
+}
+```
+
+---
+
+### 2. HTTP & REST API Concepts ⭐⭐⭐
+
+#### 2.0. Kiến thức nền tảng: JSON.stringify() và JSON.parse()
+
+Trước khi làm việc với APIs, bạn cần hiểu cách chuyển đổi giữa JavaScript objects và JSON strings.
+
+##### A. JSON là gì?
+
+**JSON (JavaScript Object Notation)** là định dạng text để trao đổi dữ liệu giữa client và server.
+
+**Mental Model:** JSON giống như "ngôn ngữ chung" mà cả JavaScript và server đều hiểu.
+
+**Ví dụ:**
+
+```javascript
+// JavaScript Object (trong code)
+const user = {
+  name: "An",
+  age: 25,
+  hobbies: ["coding", "gaming"]
+};
+
+// JSON String (gửi qua mạng)
+const jsonString = '{"name":"An","age":25,"hobbies":["coding","gaming"]}';
+```
+
+**Sự khác biệt:**
+
+| JavaScript Object | JSON String |
+|---|---|
+| Dùng trong code | Gửi qua HTTP |
+| Keys không có dấu ngoặc kép | Keys **phải** có dấu ngoặc kép |
+| `{ name: "An" }` | `'{"name":"An"}'` |
+
+---
+
+##### B. JSON.stringify() - Object → String
+
+**Mục đích:** Chuyển JavaScript object thành JSON string để gửi lên server.
+
+```javascript
+const user = {
+  name: "An",
+  age: 25,
+  isActive: true
+};
+
+// Chuyển object → JSON string
+const jsonString = JSON.stringify(user);
+console.log(jsonString);
+// Output: '{"name":"An","age":25,"isActive":true}'
+
+console.log(typeof jsonString);  // "string"
+```
+
+**Khi nào dùng?**
+- ✅ Gửi data lên server qua `fetch()` (POST, PATCH)
+- ✅ Lưu data vào `localStorage`
+- ✅ Debug (xem cấu trúc object)
+
+**Ví dụ thực tế:**
+
+```javascript
+// Gửi data lên server
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: "An", age: 25 })  // ← Object → String
+});
+```
+
+---
+
+##### C. JSON.parse() - String → Object
+
+**Mục đích:** Chuyển JSON string (từ server) thành JavaScript object để dùng trong code.
+
+```javascript
+const jsonString = '{"name":"An","age":25}';
+
+// Chuyển JSON string → object
+const user = JSON.parse(jsonString);
+console.log(user.name);  // "An"
+console.log(user.age);   // 25
+
+console.log(typeof user);  // "object"
+```
+
+**Khi nào dùng?**
+- ✅ Nhận data từ server (response.json() tự động gọi JSON.parse())
+- ✅ Đọc data từ `localStorage`
+- ✅ Parse JSON string từ bất kỳ nguồn nào
+
+**Ví dụ thực tế:**
+
+```javascript
+// Fetch data từ server
+const response = await fetch('https://api.example.com/users/1');
+const jsonString = await response.text();  // Lấy raw string
+const user = JSON.parse(jsonString);       // String → Object
+
+// Hoặc dùng shortcut (Next.js/React thường dùng):
+const user = await response.json();  // Tự động parse!
+```
+
+---
+
+##### D. Lỗi thường gặp
+
+**❌ Lỗi 1: Stringify một object đã là string**
+
+```javascript
+const user = '{"name":"An"}';  // Đã là string rồi
+const result = JSON.stringify(user);
+console.log(result);  // '"{\\"name\\":\\"An\\"}"' ← Sai! String lồng string
+```
+
+**✅ Sửa:** Chỉ stringify object, không stringify string.
+
+---
+
+**❌ Lỗi 2: Parse một object (không phải string)**
+
+```javascript
+const user = { name: "An" };  // Đã là object rồi
+const result = JSON.parse(user);  // ❌ Error: Unexpected token o in JSON
+```
+
+**✅ Sửa:** Chỉ parse string, không parse object.
+
+---
+
+**❌ Lỗi 3: Parse JSON không hợp lệ**
+
+```javascript
+const invalidJson = "{name: 'An'}";  // ❌ Keys không có dấu ngoặc kép
+const result = JSON.parse(invalidJson);  // ❌ Error: Unexpected token n
+```
+
+**✅ Sửa:** Đảm bảo JSON string hợp lệ (keys phải có dấu ngoặc kép).
+
+---
+
+##### E. Bảng tóm tắt
+
+| Hàm | Input | Output | Khi nào dùng? |
+|---|---|---|---|
+| **`JSON.stringify()`** | JavaScript Object | JSON String | Gửi data lên server |
+| **`JSON.parse()`** | JSON String | JavaScript Object | Nhận data từ server |
+
+**Quy tắc vàng:**
+- Gửi data → `JSON.stringify()`
+- Nhận data → `JSON.parse()` (hoặc `response.json()`)
+
+---
+
+#### 2.1. HTTP Methods (CRUD Operations)
+
+| Method | Mục đích | Ví dụ | Có body? |
+|---|---|---|---|
+| **GET** | Lấy dữ liệu | Xem danh sách users | ❌ Không |
+| **POST** | Tạo mới | Tạo user mới | ✅ Có |
+| **PUT** | Cập nhật toàn bộ | Sửa toàn bộ thông tin user | ✅ Có |
+| **PATCH** | Cập nhật một phần | Chỉ sửa tên user | ✅ Có |
+| **DELETE** | Xóa | Xóa user | ❌ Không |
+
+#### 2.2. Fetch API - Các ví dụ thực tế
+
+##### A. GET - Lấy dữ liệu
+
+```javascript
+// Lấy danh sách users
+async function getUsers() {
+  const response = await fetch('https://api.example.com/users');
+  const users = await response.json();
+  return users;
+}
+
+// Lấy 1 user cụ thể
+async function getUser(id) {
+  const response = await fetch(`https://api.example.com/users/${id}`);
+  const user = await response.json();
+  return user;
+}
+```
+
+##### B. POST - Tạo mới
+
+```javascript
+async function createUser(userData) {
+  const response = await fetch('https://api.example.com/users', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),  // Chuyển object → JSON string
+  });
+  
+  const newUser = await response.json();
+  return newUser;
+}
+
+// Sử dụng
+const user = await createUser({ name: 'An', email: 'an@example.com' });
+```
+
+##### C. PATCH - Cập nhật
+
+```javascript
+async function updateUser(id, updates) {
+  const response = await fetch(`https://api.example.com/users/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+  
+  return response.json();
+}
+
+// Sử dụng
+await updateUser(1, { name: 'Bình' });  // Chỉ sửa tên
+```
+
+##### D. DELETE - Xóa
+
+```javascript
+async function deleteUser(id) {
+  const response = await fetch(`https://api.example.com/users/${id}`, {
+    method: 'DELETE',
+  });
+  
+  return response.ok;  // true nếu thành công
+}
+```
+
+---
+
+#### 2.3. HTTP Status Codes
+
+| Code | Ý nghĩa | Khi nào xảy ra? |
+|---|---|---|
+| **200** | OK | Request thành công |
+| **201** | Created | Tạo mới thành công (POST) |
+| **204** | No Content | Xóa thành công (DELETE) |
+| **400** | Bad Request | Dữ liệu gửi lên sai format |
+| **401** | Unauthorized | Chưa đăng nhập |
+| **403** | Forbidden | Không có quyền truy cập |
+| **404** | Not Found | Không tìm thấy resource |
+| **500** | Server Error | Lỗi server |
+
+**Kiểm tra status code:**
+
+```javascript
+async function fetchData() {
+  const response = await fetch('https://api.example.com/data');
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Không tìm thấy dữ liệu');
+    } else if (response.status === 401) {
+      throw new Error('Vui lòng đăng nhập');
+    } else {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+  }
+  
+  return response.json();
+}
+```
+
+---
+
+#### 2.4. Headers (Request & Response)
+
+**Request Headers** - Gửi lên server:
+
+```javascript
+fetch('https://api.example.com/data', {
+  headers: {
+    'Content-Type': 'application/json',      // Loại dữ liệu gửi đi
+    'Authorization': 'Bearer token123',      // Token xác thực
+    'Accept-Language': 'vi-VN',              // Ngôn ngữ mong muốn
+  }
+})
+```
+
+**Response Headers** - Server trả về:
+
+```javascript
+const response = await fetch('https://api.example.com/data');
+
+console.log(response.headers.get('Content-Type'));  // "application/json"
+console.log(response.headers.get('Cache-Control')); // "max-age=3600"
+```
+
+---
+
+#### 2.5. Next.js API Routes
+
+Next.js cho phép tạo API endpoints ngay trong project:
+
+```javascript
+// src/app/api/users/route.js
+
+export async function GET(request) {
+  // Lấy query params: /api/users?page=2
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get('page') || '1';
+  
+  const users = [
+    { id: 1, name: 'An' },
+    { id: 2, name: 'Bình' },
+  ];
+  
+  return Response.json({ users, page });
+}
+
+export async function POST(request) {
+  const body = await request.json();  // Parse JSON body
+  
+  // Validate
+  if (!body.name) {
+    return Response.json(
+      { error: 'Name is required' },
+      { status: 400 }
+    );
+  }
+  
+  // Lưu vào database (giả lập)
+  const newUser = { id: Date.now(), ...body };
+  
+  return Response.json(newUser, { status: 201 });
+}
+```
+
+---
+
+### 3. Environment Variables (Biến môi trường)
+
+#### 3.1. Tại sao cần Environment Variables?
+
+**Vấn đề:** Bạn có những thông tin nhạy cảm không nên commit lên Git:
+- API keys
+- Database passwords
+- Secret tokens
+
+**Giải pháp:** Lưu vào file `.env.local` (file này được Git ignore).
+
+---
+
+#### 3.2. Cách sử dụng trong Next.js
+
+**Tạo file `.env.local`:**
+
+```bash
+# .env.local (ở root project)
+
+# Server-only variables (chỉ dùng ở server)
+DATABASE_URL=postgres://user:pass@localhost/mydb
+API_SECRET_KEY=super-secret-key-123
+
+# Client-accessible variables (dùng được ở browser)
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_SITE_NAME=My App
+```
+
+**Quy tắc quan trọng:**
+- Biến **KHÔNG** có prefix `NEXT_PUBLIC_` → Chỉ dùng được ở **server**
+- Biến **CÓ** prefix `NEXT_PUBLIC_` → Dùng được ở **cả server và client**
+
+---
+
+#### 3.3. Sử dụng trong code
+
+**Server Component / API Route:**
+
+```javascript
+// src/app/api/data/route.js
+
+export async function GET() {
+  // ✅ OK - Chạy trên server
+  const dbUrl = process.env.DATABASE_URL;
+  const apiKey = process.env.API_SECRET_KEY;
+  
+  // Kết nối database, gọi API...
+  
+  return Response.json({ success: true });
+}
+```
+
+**Client Component:**
+
+```javascript
+// src/components/Header.js
+'use client';
+
+export default function Header() {
+  // ✅ OK - Có NEXT_PUBLIC_
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  
+  // ❌ undefined - Không có NEXT_PUBLIC_
+  const dbUrl = process.env.DATABASE_URL;  // undefined!
+  
+  return <h1>{siteName}</h1>;
+}
+```
+
+---
+
+#### 3.4. Các file .env khác nhau
+
+| File | Khi nào dùng? | Commit lên Git? |
+|---|---|---|
+| `.env.local` | Development (local machine) | ❌ Không |
+| `.env.development` | Development (shared settings) | ✅ Có thể |
+| `.env.production` | Production (Vercel tự động dùng) | ❌ Không |
+| `.env` | Default cho tất cả môi trường | ✅ Có thể |
+
+**Thứ tự ưu tiên:** `.env.local` > `.env.development` > `.env`
+
+---
+
+#### 3.5. Bảo mật
+
+**❌ KHÔNG BAO GIỜ:**
+- Commit `.env.local` lên Git
+- Để API keys trong code
+- Dùng `NEXT_PUBLIC_` cho thông tin nhạy cảm
+
+**✅ NÊN:**
+- Thêm `.env*.local` vào `.gitignore`
+- Dùng Vercel Environment Variables cho production
+- Document các biến cần thiết trong README
+
+---
+
+### 4. JavaScript ES6+ Features
+
+#### 4.1. Optional Chaining (`?.`)
+
+**Vấn đề:** Truy cập nested properties có thể gây lỗi nếu object null/undefined.
+
+```javascript
+// ❌ Lỗi nếu user null
+const name = user.profile.name;  // TypeError: Cannot read property 'profile' of null
+
+// ✅ Cách cũ - Kiểm tra từng cấp
+const name = user && user.profile && user.profile.name;
+
+// ✅ Cách mới - Optional chaining
+const name = user?.profile?.name;  // undefined nếu user hoặc profile null
+```
+
+**Trong Next.js:**
+
+```jsx
+export default function UserProfile({ user }) {
+  return (
+    <div>
+      <h1>{user?.name ?? 'Guest'}</h1>
+      <p>{user?.profile?.bio ?? 'No bio'}</p>
+      <img src={user?.avatar?.url ?? '/default.png'} />
+    </div>
+  );
+}
+```
+
+---
+
+#### 4.2. Nullish Coalescing (`??`)
+
+**Khác biệt với `||`:**
+
+```javascript
+const value1 = 0;
+const value2 = '';
+const value3 = null;
+
+// || - Coi 0, '', false là "falsy" → Dùng default
+console.log(value1 || 10);  // 10 (vì 0 là falsy)
+console.log(value2 || 'default');  // 'default' (vì '' là falsy)
+
+// ?? - Chỉ coi null/undefined là "nullish" → Dùng default
+console.log(value1 ?? 10);  // 0 (vì 0 không phải null/undefined)
+console.log(value2 ?? 'default');  // '' (vì '' không phải null/undefined)
+console.log(value3 ?? 'default');  // 'default' (vì null)
+```
+
+**Khi nào dùng `??`:**
+- Khi `0`, `''`, `false` là giá trị hợp lệ
+- Chỉ muốn fallback khi `null` hoặc `undefined`
+
+---
+
+#### 4.3. Dynamic Imports
+
+**Vấn đề:** Import tất cả components → Bundle size lớn.
+
+**Giải pháp:** Chỉ load component khi cần (Code Splitting).
+
+```javascript
+// src/app/page.js
+import dynamic from 'next/dynamic';
+
+// Component nặng chỉ load khi cần
+const HeavyChart = dynamic(() => import('@/components/HeavyChart'), {
+  loading: () => <p>Đang tải biểu đồ...</p>,
+  ssr: false,  // Không render trên server (nếu dùng browser APIs)
+});
+
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <HeavyChart />  {/* Chỉ load khi component này render */}
+    </div>
+  );
+}
+```
+
+---
+
+### 5. Tóm tắt: Checklist kiến thức
+
+Trước khi học Next.js, hãy chắc chắn bạn hiểu:
+
+**JavaScript:**
+- ✅ Async/Await và Promises
+- ✅ `try/catch` error handling
+- ✅ Optional chaining (`?.`)
+- ✅ Nullish coalescing (`??`)
+
+**HTTP/API:**
+- ✅ HTTP methods (GET, POST, PUT, DELETE)
+- ✅ Fetch API
+- ✅ Request/Response headers
+- ✅ Status codes (200, 404, 500, etc.)
+
+**Next.js Specific:**
+- ✅ Environment variables (`.env.local`, `NEXT_PUBLIC_`)
+- ✅ Server vs Client concepts
+- ✅ File-based routing
+
+---
+
+### 6. Lộ trình học đề xuất
+
+**Tuần 1: JavaScript Async (Quan trọng nhất!)**
+1. Học Promise basics (1 ngày)
+2. Học Async/Await (2 ngày)
+3. Thực hành fetch API (2 ngày)
+
+**Tuần 2: HTTP & APIs**
+1. Hiểu REST API (1 ngày)
+2. Thực hành CRUD với fetch (2 ngày)
+3. Học về headers, status codes (1 ngày)
+
+**Tuần 3: Next.js Basics**
+1. Setup project, hiểu cấu trúc (1 ngày)
+2. Server vs Client Components (2 ngày)
+3. File-based routing (2 ngày)
+
+**Tuần 4: Practice**
+1. Build một blog app đơn giản
+2. Fetch data từ API
+3. Tạo API routes
+4. Deploy lên Vercel
+
+---
+
+### 7. Tài nguyên học tập
+
+**JavaScript Async:**
+- [JavaScript.info - Async/Await](https://javascript.info/async-await) ⭐
+- [MDN - Using Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)
+
+**HTTP/REST API:**
+- [MDN - Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+- [HTTP Status Codes](https://httpstatuses.com/)
+
+**Next.js:**
+- [Next.js Learn Course](https://nextjs.org/learn) ⭐ **Bắt đầu từ đây!**
+- [Next.js Docs](https://nextjs.org/docs)
+
+---
+
+### 8. Kết luận
+
+**Bạn đã có từ React (70%):**
+- ✅ Components, JSX, Props, State
+- ✅ Hooks (useState, useEffect, useContext)
+- ✅ Event handling, Forms, Lists
+
+**Bạn cần bổ sung (30%):**
+- 🎯 **Async/Await** (Quan trọng nhất!)
+- 🎯 HTTP/REST API concepts
+- 🎯 Environment variables
+- 🎯 Server vs Client thinking
+
+**Thời gian ước tính:** 3-4 tuần học part-time (2-3 giờ/ngày)
+
+**Lời khuyên cuối:** Đừng cố học hết lý thuyết. Sau khi hiểu async/await và fetch API, hãy **bắt đầu build một project Next.js nhỏ ngay**. Learning by doing là cách nhanh nhất! 🚀
+
+---
+
 
 ## PHẦN KẾT: TỪ HỌC GIẢ ĐẾN KỸ SƯ
 
