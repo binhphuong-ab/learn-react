@@ -5163,7 +5163,837 @@ git push -u origin main
 
 ---
 
-### 10. So sánh Next.js vs React thuần
+### 10. State Management: Quản lý trạng thái toàn cục
+
+#### 10.1. Tại sao cần State Management Libraries?
+
+**Vấn đề với Context API:**
+
+Context API (đã học ở Phần 5) tốt cho:
+- ✅ Chia sẻ data đơn giản (theme, user info)
+- ✅ Ứng dụng nhỏ, vừa
+
+Nhưng có hạn chế:
+- ❌ Re-render không cần thiết (mọi component dùng context đều re-render khi context thay đổi)
+- ❌ Không có DevTools để debug
+- ❌ Khó tổ chức code khi app lớn
+
+**Giải pháp:** Dùng State Management Libraries chuyên nghiệp.
+
+---
+
+#### 10.2. Redux vs Zustand
+
+| Tiêu chí | Redux | Zustand |
+|---|---|---|
+| **Độ phức tạp** | Cao (nhiều boilerplate) | Thấp (code ít hơn) |
+| **Learning curve** | Khó | Dễ |
+| **DevTools** | ✅ Mạnh mẽ | ✅ Có |
+| **Performance** | Tốt | Tốt hơn |
+| **Khi nào dùng?** | App lớn, team lớn | App vừa/nhỏ, cần đơn giản |
+
+**Khuyến nghị:** Bắt đầu với **Zustand** (dễ học hơn), sau đó học Redux nếu cần.
+
+---
+
+#### 10.3. Zustand - State Management đơn giản
+
+##### A. Cài đặt
+
+```bash
+npm install zustand
+```
+
+##### B. Tạo Store (Kho lưu trữ state)
+
+```javascript
+// src/store/useCartStore.js
+import { create } from 'zustand';
+
+const useCartStore = create((set) => ({
+  // State
+  items: [],
+  totalPrice: 0,
+  
+  // Actions (Hành động thay đổi state)
+  addItem: (product) => set((state) => ({
+    items: [...state.items, product],
+    totalPrice: state.totalPrice + product.price
+  })),
+  
+  removeItem: (productId) => set((state) => ({
+    items: state.items.filter(item => item.id !== productId),
+    totalPrice: state.items
+      .filter(item => item.id !== productId)
+      .reduce((sum, item) => sum + item.price, 0)
+  })),
+  
+  clearCart: () => set({ items: [], totalPrice: 0 })
+}));
+
+export default useCartStore;
+```
+
+##### C. Sử dụng trong Component
+
+```jsx
+// src/components/ProductCard.js
+'use client';
+
+import useCartStore from '@/store/useCartStore';
+
+export default function ProductCard({ product }) {
+  const addItem = useCartStore((state) => state.addItem);
+  
+  return (
+    <div>
+      <h3>{product.name}</h3>
+      <p>${product.price}</p>
+      <button onClick={() => addItem(product)}>
+        Thêm vào giỏ hàng
+      </button>
+    </div>
+  );
+}
+```
+
+```jsx
+// src/components/Cart.js
+'use client';
+
+import useCartStore from '@/store/useCartStore';
+
+export default function Cart() {
+  const items = useCartStore((state) => state.items);
+  const totalPrice = useCartStore((state) => state.totalPrice);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const clearCart = useCartStore((state) => state.clearCart);
+  
+  return (
+    <div>
+      <h2>Giỏ hàng ({items.length} sản phẩm)</h2>
+      
+      {items.map(item => (
+        <div key={item.id}>
+          <span>{item.name} - ${item.price}</span>
+          <button onClick={() => removeItem(item.id)}>Xóa</button>
+        </div>
+      ))}
+      
+      <p>Tổng: ${totalPrice}</p>
+      <button onClick={clearCart}>Xóa tất cả</button>
+    </div>
+  );
+}
+```
+
+**Ưu điểm Zustand:**
+- ✅ Code ngắn gọn, dễ hiểu
+- ✅ Không cần Provider wrapper
+- ✅ Tự động tối ưu re-render (chỉ component dùng state nào thì re-render khi state đó thay đổi)
+
+---
+
+#### 10.4. Redux Toolkit - State Management cho App lớn
+
+##### A. Cài đặt
+
+```bash
+npm install @reduxjs/toolkit react-redux
+```
+
+##### B. Tạo Slice (Phần state)
+
+```javascript
+// src/store/cartSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState: {
+    items: [],
+    totalPrice: 0
+  },
+  reducers: {
+    addItem: (state, action) => {
+      state.items.push(action.payload);
+      state.totalPrice += action.payload.price;
+    },
+    removeItem: (state, action) => {
+      const index = state.items.findIndex(item => item.id === action.payload);
+      if (index !== -1) {
+        state.totalPrice -= state.items[index].price;
+        state.items.splice(index, 1);
+      }
+    },
+    clearCart: (state) => {
+      state.items = [];
+      state.totalPrice = 0;
+    }
+  }
+});
+
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+export default cartSlice.reducer;
+```
+
+##### C. Tạo Store
+
+```javascript
+// src/store/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import cartReducer from './cartSlice';
+
+export const store = configureStore({
+  reducer: {
+    cart: cartReducer
+  }
+});
+```
+
+##### D. Setup Provider (Next.js App Router)
+
+```jsx
+// src/app/layout.js
+'use client';
+
+import { Provider } from 'react-redux';
+import { store } from '@/store/store';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="vi">
+      <body>
+        <Provider store={store}>
+          {children}
+        </Provider>
+      </body>
+    </html>
+  );
+}
+```
+
+##### E. Sử dụng trong Component
+
+```jsx
+// src/components/ProductCard.js
+'use client';
+
+import { useDispatch } from 'react-redux';
+import { addItem } from '@/store/cartSlice';
+
+export default function ProductCard({ product }) {
+  const dispatch = useDispatch();
+  
+  return (
+    <div>
+      <h3>{product.name}</h3>
+      <p>${product.price}</p>
+      <button onClick={() => dispatch(addItem(product))}>
+        Thêm vào giỏ hàng
+      </button>
+    </div>
+  );
+}
+```
+
+```jsx
+// src/components/Cart.js
+'use client';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { removeItem, clearCart } from '@/store/cartSlice';
+
+export default function Cart() {
+  const items = useSelector((state) => state.cart.items);
+  const totalPrice = useSelector((state) => state.cart.totalPrice);
+  const dispatch = useDispatch();
+  
+  return (
+    <div>
+      <h2>Giỏ hàng ({items.length} sản phẩm)</h2>
+      
+      {items.map(item => (
+        <div key={item.id}>
+          <span>{item.name} - ${item.price}</span>
+          <button onClick={() => dispatch(removeItem(item.id))}>Xóa</button>
+        </div>
+      ))}
+      
+      <p>Tổng: ${totalPrice}</p>
+      <button onClick={() => dispatch(clearCart())}>Xóa tất cả</button>
+    </div>
+  );
+}
+```
+
+**Khi nào dùng Redux?**
+- ✅ App có nhiều state phức tạp
+- ✅ Cần time-travel debugging (xem lại lịch sử thay đổi state)
+- ✅ Team lớn, cần quy chuẩn code
+
+---
+
+#### 10.5. So sánh Context API vs Zustand vs Redux
+
+| Tính năng | Context API | Zustand | Redux Toolkit |
+|---|---|---|---|
+| **Setup** | Dễ | Dễ | Trung bình |
+| **Boilerplate** | Ít | Rất ít | Trung bình |
+| **Performance** | ⚠️ Re-render nhiều | ✅ Tối ưu | ✅ Tối ưu |
+| **DevTools** | ❌ Không | ✅ Có | ✅ Mạnh mẽ |
+| **Learning Curve** | Dễ | Dễ | Khó hơn |
+| **Use Case** | App nhỏ | App vừa | App lớn |
+
+**Lộ trình học:**
+1. Context API (đã học ở Phần 5)
+2. Zustand (học tiếp)
+3. Redux Toolkit (nếu cần)
+
+---
+
+### 11. Authentication: Xác thực người dùng với NextAuth.js
+
+#### 11.1. Tại sao cần Authentication?
+
+**Authentication (Xác thực)** là quá trình xác định "bạn là ai" (đăng nhập).
+
+**Use cases:**
+- Đăng nhập/Đăng ký
+- Bảo vệ trang (chỉ user đã đăng nhập mới xem được)
+- Phân quyền (admin, user thường)
+
+---
+
+#### 11.2. NextAuth.js - Giải pháp Authentication cho Next.js
+
+**NextAuth.js** là thư viện authentication chính thức cho Next.js.
+
+**Tính năng:**
+- ✅ Đăng nhập bằng Email/Password
+- ✅ Đăng nhập bằng OAuth (Google, GitHub, Facebook)
+- ✅ Session management
+- ✅ JWT tokens
+- ✅ Database integration
+
+##### A. Cài đặt
+
+```bash
+npm install next-auth
+```
+
+##### B. Tạo API Route cho NextAuth
+
+```javascript
+// src/app/api/auth/[...nextauth]/route.js
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+
+const handler = NextAuth({
+  providers: [
+    // 1. Đăng nhập bằng Google
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    
+    // 2. Đăng nhập bằng Email/Password
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        // Kiểm tra email/password (ví dụ đơn giản)
+        if (credentials.email === 'user@example.com' && credentials.password === '123456') {
+          return { id: 1, name: 'User', email: 'user@example.com' };
+        }
+        return null;  // Đăng nhập thất bại
+      }
+    })
+  ],
+  
+  // Tùy chỉnh pages
+  pages: {
+    signIn: '/login',  // Trang đăng nhập tùy chỉnh
+  },
+  
+  // Callbacks
+  callbacks: {
+    async session({ session, token }) {
+      session.user.id = token.sub;
+      return session;
+    }
+  },
+  
+  // Secret key (tạo bằng: openssl rand -base64 32)
+  secret: process.env.NEXTAUTH_SECRET,
+});
+
+export { handler as GET, handler as POST };
+```
+
+##### C. Tạo file .env.local
+
+```bash
+# .env.local
+
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
+
+# Google OAuth (lấy từ Google Cloud Console)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+##### D. Tạo trang đăng nhập
+
+```jsx
+// src/app/login/page.js
+'use client';
+
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: true,
+      callbackUrl: '/dashboard'
+    });
+  };
+  
+  return (
+    <div>
+      <h1>Đăng nhập</h1>
+      
+      {/* Đăng nhập bằng Google */}
+      <button onClick={() => signIn('google', { callbackUrl: '/dashboard' })}>
+        Đăng nhập bằng Google
+      </button>
+      
+      <hr />
+      
+      {/* Đăng nhập bằng Email/Password */}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit">Đăng nhập</button>
+      </form>
+    </div>
+  );
+}
+```
+
+##### E. Sử dụng Session trong Component
+
+```jsx
+// src/components/UserProfile.js
+'use client';
+
+import { useSession, signOut } from 'next-auth/react';
+
+export default function UserProfile() {
+  const { data: session, status } = useSession();
+  
+  if (status === 'loading') {
+    return <p>Đang tải...</p>;
+  }
+  
+  if (status === 'unauthenticated') {
+    return <p>Bạn chưa đăng nhập</p>;
+  }
+  
+  return (
+    <div>
+      <p>Xin chào, {session.user.name}!</p>
+      <p>Email: {session.user.email}</p>
+      <button onClick={() => signOut()}>Đăng xuất</button>
+    </div>
+  );
+}
+```
+
+##### F. Bảo vệ trang (Protected Route)
+
+```jsx
+// src/app/dashboard/page.js
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+
+export default async function DashboardPage() {
+  const session = await getServerSession();
+  
+  // Nếu chưa đăng nhập → Redirect về trang login
+  if (!session) {
+    redirect('/login');
+  }
+  
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Chào mừng, {session.user.name}!</p>
+    </div>
+  );
+}
+```
+
+##### G. Bảo vệ API Route
+
+```javascript
+// src/app/api/protected/route.js
+import { getServerSession } from 'next-auth';
+
+export async function GET(request) {
+  const session = await getServerSession();
+  
+  if (!session) {
+    return Response.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+  
+  // User đã đăng nhập
+  return Response.json({
+    message: 'Protected data',
+    user: session.user
+  });
+}
+```
+
+---
+
+#### 11.3. OAuth với Google - Hướng dẫn setup
+
+**Bước 1: Tạo Google OAuth Credentials**
+
+1. Truy cập: [Google Cloud Console](https://console.cloud.google.com/)
+2. Tạo project mới
+3. Vào **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth 2.0 Client ID**
+5. Chọn **Web application**
+6. Thêm **Authorized redirect URIs**:
+   - Development: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://yourdomain.com/api/auth/callback/google`
+7. Copy **Client ID** và **Client Secret** vào `.env.local`
+
+**Bước 2: Test**
+
+```bash
+npm run dev
+```
+
+Truy cập `http://localhost:3000/login` → Click "Đăng nhập bằng Google"
+
+---
+
+#### 11.4. Best Practices
+
+**✅ NÊN:**
+- Dùng `NEXTAUTH_SECRET` mạnh (random string)
+- Lưu session vào database (production)
+- Validate user input
+- Dùng HTTPS (production)
+
+**❌ KHÔNG NÊN:**
+- Commit `.env.local` lên Git
+- Lưu password dạng plain text
+- Dùng HTTP (production)
+
+---
+
+### 12. Testing: Kiểm thử ứng dụng
+
+#### 12.1. Tại sao cần Testing?
+
+**Testing** giúp:
+- ✅ Phát hiện bug sớm
+- ✅ Tự tin khi refactor code
+- ✅ Document code (test = ví dụ sử dụng)
+- ✅ Giảm bug ở production
+
+**Các loại test:**
+1. **Unit Test** - Test từng function/component riêng lẻ
+2. **Integration Test** - Test nhiều components hoạt động cùng nhau
+3. **E2E Test** - Test toàn bộ user flow (như user thật)
+
+---
+
+#### 12.2. Jest - Unit Testing
+
+**Jest** là framework test phổ biến nhất cho JavaScript/React.
+
+##### A. Cài đặt
+
+```bash
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom
+```
+
+##### B. Cấu hình Jest
+
+```javascript
+// jest.config.js
+const nextJest = require('next/jest');
+
+const createJestConfig = nextJest({
+  dir: './',
+});
+
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
+};
+
+module.exports = createJestConfig(customJestConfig);
+```
+
+```javascript
+// jest.setup.js
+import '@testing-library/jest-dom';
+```
+
+##### C. Viết Unit Test
+
+**Test một function:**
+
+```javascript
+// src/lib/utils.js
+export function add(a, b) {
+  return a + b;
+}
+
+export function formatPrice(price) {
+  return `$${price.toFixed(2)}`;
+}
+```
+
+```javascript
+// src/lib/utils.test.js
+import { add, formatPrice } from './utils';
+
+describe('Utils', () => {
+  test('add() cộng 2 số', () => {
+    expect(add(2, 3)).toBe(5);
+    expect(add(-1, 1)).toBe(0);
+  });
+  
+  test('formatPrice() format giá tiền', () => {
+    expect(formatPrice(10)).toBe('$10.00');
+    expect(formatPrice(9.99)).toBe('$9.99');
+  });
+});
+```
+
+**Test một Component:**
+
+```jsx
+// src/components/Button.js
+export default function Button({ children, onClick, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}
+```
+
+```javascript
+// src/components/Button.test.js
+import { render, screen, fireEvent } from '@testing-library/react';
+import Button from './Button';
+
+describe('Button Component', () => {
+  test('render text đúng', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeInTheDocument();
+  });
+  
+  test('gọi onClick khi click', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    fireEvent.click(screen.getByText('Click me'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+  
+  test('disabled khi có prop disabled', () => {
+    render(<Button disabled>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeDisabled();
+  });
+});
+```
+
+##### D. Chạy tests
+
+```bash
+# Chạy tất cả tests
+npm test
+
+# Chạy tests với coverage
+npm test -- --coverage
+
+# Chạy tests ở watch mode
+npm test -- --watch
+```
+
+---
+
+#### 12.3. Cypress - End-to-End Testing
+
+**Cypress** test ứng dụng như một user thật (mở browser, click, nhập text).
+
+##### A. Cài đặt
+
+```bash
+npm install --save-dev cypress
+```
+
+##### B. Khởi tạo Cypress
+
+```bash
+npx cypress open
+```
+
+##### C. Viết E2E Test
+
+```javascript
+// cypress/e2e/login.cy.js
+
+describe('Login Flow', () => {
+  it('đăng nhập thành công', () => {
+    // 1. Mở trang login
+    cy.visit('http://localhost:3000/login');
+    
+    // 2. Nhập email
+    cy.get('input[type="email"]').type('user@example.com');
+    
+    // 3. Nhập password
+    cy.get('input[type="password"]').type('123456');
+    
+    // 4. Click nút đăng nhập
+    cy.get('button[type="submit"]').click();
+    
+    // 5. Kiểm tra redirect về dashboard
+    cy.url().should('include', '/dashboard');
+    
+    // 6. Kiểm tra hiển thị tên user
+    cy.contains('Xin chào, User').should('be.visible');
+  });
+  
+  it('hiển thị lỗi khi sai password', () => {
+    cy.visit('http://localhost:3000/login');
+    
+    cy.get('input[type="email"]').type('user@example.com');
+    cy.get('input[type="password"]').type('wrong-password');
+    cy.get('button[type="submit"]').click();
+    
+    // Kiểm tra hiển thị thông báo lỗi
+    cy.contains('Email hoặc mật khẩu không đúng').should('be.visible');
+  });
+});
+```
+
+```javascript
+// cypress/e2e/shopping-cart.cy.js
+
+describe('Shopping Cart', () => {
+  it('thêm sản phẩm vào giỏ hàng', () => {
+    cy.visit('http://localhost:3000/products');
+    
+    // Click nút "Thêm vào giỏ hàng" của sản phẩm đầu tiên
+    cy.get('[data-testid="add-to-cart"]').first().click();
+    
+    // Kiểm tra số lượng sản phẩm trong giỏ hàng
+    cy.get('[data-testid="cart-count"]').should('contain', '1');
+    
+    // Mở giỏ hàng
+    cy.get('[data-testid="cart-icon"]').click();
+    
+    // Kiểm tra sản phẩm có trong giỏ hàng
+    cy.get('[data-testid="cart-item"]').should('have.length', 1);
+  });
+});
+```
+
+##### D. Chạy Cypress tests
+
+```bash
+# Mở Cypress UI
+npx cypress open
+
+# Chạy headless (CI/CD)
+npx cypress run
+```
+
+---
+
+#### 12.4. Best Practices
+
+**Unit Tests:**
+- ✅ Test logic phức tạp (utils, helpers)
+- ✅ Test components có nhiều states
+- ✅ Nhanh, chạy thường xuyên
+
+**E2E Tests:**
+- ✅ Test user flows quan trọng (đăng nhập, thanh toán)
+- ✅ Test trước khi deploy
+- ⚠️ Chậm hơn unit tests
+
+**Quy tắc vàng:**
+- Viết tests cho code quan trọng (authentication, payment)
+- Không cần test mọi thứ (UI đơn giản không cần test)
+- Test behavior, không test implementation
+
+---
+
+#### 12.5. Test Coverage
+
+**Coverage** = Tỷ lệ code được test.
+
+```bash
+npm test -- --coverage
+```
+
+**Output:**
+```
+--------------------|---------|----------|---------|---------|
+File                | % Stmts | % Branch | % Funcs | % Lines |
+--------------------|---------|----------|---------|---------|
+All files           |   85.5  |   78.2   |   90.1  |   85.5  |
+ components/        |   92.3  |   85.7   |   100   |   92.3  |
+  Button.js         |   100   |   100    |   100   |   100   |
+  Card.js           |   85.7  |   75     |   100   |   85.7  |
+ lib/               |   78.9  |   70.5   |   80.2  |   78.9  |
+  utils.js          |   100   |   100    |   100   |   100   |
+--------------------|---------|----------|---------|---------|
+```
+
+**Mục tiêu:** 70-80% coverage là tốt. 100% không cần thiết.
+
+---
+
+### 13. So sánh Next.js vs React thuần
 
 | Tính năng | React (CRA) | Next.js |
 |---|---|---|
@@ -5176,7 +6006,7 @@ git push -u origin main
 
 ---
 
-### 11. Khi nào dùng Next.js?
+### 14. Khi nào dùng Next.js?
 
 **✅ Dùng Next.js khi:**
 - Cần SEO tốt (blog, e-commerce, landing page).
@@ -5191,7 +6021,7 @@ git push -u origin main
 
 ---
 
-### 12. Tài nguyên học thêm
+### 15. Tài nguyên học thêm
 
 - **Official Docs:** [nextjs.org/docs](https://nextjs.org/docs)
 - **Tutorial:** [nextjs.org/learn](https://nextjs.org/learn)
