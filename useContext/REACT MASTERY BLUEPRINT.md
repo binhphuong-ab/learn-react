@@ -4243,28 +4243,97 @@ export default function Navbar() {
 
 ---
 
-### 5. Data Fetching: 3 Chiến lược
+### 5. Data Fetching: 4 Chiến lược
 
-Next.js hỗ trợ 3 cách render trang, mỗi cách phù hợp với một use case.
+React và Next.js hỗ trợ 4 cách render và fetch data, mỗi cách phù hợp với một use case riêng biệt.
 
-#### 5.1. SSR - Server-Side Rendering (Dynamic)
+> **Mental Model:** Hãy nghĩ về **nơi** (WHERE) và **khi nào** (WHEN) dữ liệu được fetch:
+> - **CSR**: Fetch ở **Browser**, **sau khi** trang đã load
+> - **SSR**: Fetch ở **Server**, **mỗi** request
+> - **SSG**: Fetch ở **Server**, **lúc** build time (1 lần)
+> - **ISR**: Fetch ở **Server**, **lúc** build + **tự động** regenerate theo thời gian
 
-**Khi nào dùng:** Dữ liệu thay đổi liên tục (giá cổ phiếu, tin tức mới nhất).
+---
+
+#### 5.1. CSR - Client-Side Rendering (Browser-based)
+
+**Khi nào dùng:** 
+- Dữ liệu cá nhân hóa (user-specific data)
+- Dữ liệu không cần SEO (dashboard, admin panel)
+- Progressive enhancement (load trang trước, data sau)
+
+**Cơ chế:** Server gửi HTML rỗng/skeleton → JavaScript load → Browser fetch data → Render.
+
+**Đặc điểm:**
+- ✅ **Tốt cho:** Interactive dashboards, user-specific data
+- ❌ **Không tốt cho:** SEO, initial page load speed
+
+```jsx
+// src/app/dashboard/page.js (Client Component)
+'use client';  // Đánh dấu đây là Client Component
+
+import { useState, useEffect } from 'react';
+
+export default function DashboardPage() {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch data ở browser (sau khi component mount)
+    async function fetchUserData() {
+      const res = await fetch('/api/user/profile');
+      const data = await res.json();
+      setUserData(data);
+      setLoading(false);
+    }
+    
+    fetchUserData();
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      <h1>Welcome, {userData.name}!</h1>
+      <p>Your balance: ${userData.balance}</p>
+    </div>
+  );
+}
+```
+
+**Timeline:**
+1. Browser nhận HTML (rỗng/skeleton)
+2. JavaScript load và execute
+3. `useEffect` chạy → fetch data
+4. Re-render với data
+
+---
+
+#### 5.2. SSR - Server-Side Rendering (Dynamic)
+
+**Khi nào dùng:** 
+- Dữ liệu thay đổi liên tục cho mọi user (giá cổ phiếu, tin tức mới nhất)
+- Cần SEO + fresh data mọi lúc
+- Personalized content cần SEO
 
 **Cơ chế:** Mỗi request → Server fetch data mới → Render HTML → Gửi về browser.
 
+**Đặc điểm:**
+- ✅ **Tốt cho:** SEO, fresh data mọi request
+- ❌ **Không tốt cho:** Performance (chậm hơn SSG/ISR), server load cao
+
 ```jsx
-// src/app/stocks/page.js
+// src/app/stocks/page.js (Server Component - mặc định)
 
 async function getStocks() {
   const res = await fetch('https://api.example.com/stocks', {
-    cache: 'no-store'  // Không cache, luôn fetch mới
+    cache: 'no-store'  // Không cache, luôn fetch mới mỗi request
   });
   return res.json();
 }
 
 export default async function StocksPage() {
-  const stocks = await getStocks();
+  const stocks = await getStocks();  // Fetch trên server mỗi request
   
   return (
     <div>
@@ -4279,26 +4348,39 @@ export default async function StocksPage() {
 }
 ```
 
+**Timeline:**
+1. User request `/stocks`
+2. Server fetch data mới từ API
+3. Server render HTML với data
+4. Browser nhận HTML hoàn chỉnh (có data)
+
 ---
 
-#### 5.2. SSG - Static Site Generation (Static)
+#### 5.3. SSG - Static Site Generation (Static)
 
-**Khi nào dùng:** Dữ liệu ít thay đổi (blog posts, documentation).
+**Khi nào dùng:** 
+- Dữ liệu ít/không thay đổi (blog posts, documentation, landing pages)
+- Ưu tiên performance tối đa
+- Traffic cao (static files dễ cache và serve qua CDN)
 
 **Cơ chế:** Build time → Fetch data 1 lần → Tạo HTML tĩnh → Serve HTML cho mọi request.
 
+**Đặc điểm:**
+- ✅ **Tốt cho:** Performance cực nhanh, SEO, low server load
+- ❌ **Không tốt cho:** Dữ liệu thay đổi thường xuyên (cần rebuild để update)
+
 ```jsx
-// src/app/docs/page.js
+// src/app/docs/page.js (Server Component)
 
 async function getDocs() {
   const res = await fetch('https://api.example.com/docs', {
-    cache: 'force-cache'  // Cache vĩnh viễn
+    cache: 'force-cache'  // Cache vĩnh viễn (SSG)
   });
   return res.json();
 }
 
 export default async function DocsPage() {
-  const docs = await getDocs();
+  const docs = await getDocs();  // Fetch 1 lần lúc build
   
   return (
     <div>
@@ -4317,20 +4399,33 @@ export default async function DocsPage() {
 **Build command:**
 
 ```bash
-npm run build  # Tạo HTML tĩnh
-npm start      # Serve HTML tĩnh
+npm run build  # Fetch data + Tạo HTML tĩnh
+npm start      # Serve HTML tĩnh (không fetch lại data)
 ```
+
+**Timeline:**
+1. Build time: Fetch data → Tạo HTML tĩnh
+2. Runtime: Mọi request serve HTML tĩnh (instant)
 
 ---
 
-#### 5.3. ISR - Incremental Static Regeneration (Hybrid)
+#### 5.4. ISR - Incremental Static Regeneration (SSG + Auto-Update)
 
-**Khi nào dùng:** Dữ liệu thay đổi định kỳ (mỗi 1 giờ, mỗi ngày).
+**Khi nào dùng:** 
+- Dữ liệu thay đổi định kỳ nhưng không cần realtime (product catalog, blog với analytics)
+- Muốn kết hợp tốc độ của SSG + freshness của SSR
+- Traffic cao nhưng cần data "relatively fresh"
 
-**Cơ chế:** Tạo HTML tĩnh → Sau X giây → Tự động regenerate HTML mới.
+**Cơ chế:** Build tạo HTML tĩnh (như SSG) → Sau X giây → Tự động regenerate HTML mới ở background.
+
+> **Bản chất:** ISR = SSG + Revalidation Timer. Không phải chiến lược riêng biệt mà là **SSG có khả năng tự động update**.
+
+**Đặc điểm:**
+- ✅ **Tốt cho:** Best of both worlds (fast như SSG + fresh như SSR)
+- ❌ **Không tốt cho:** Realtime data (có độ trễ revalidation period)
 
 ```jsx
-// src/app/products/page.js
+// src/app/products/page.js (Server Component)
 
 async function getProducts() {
   const res = await fetch('https://api.example.com/products', {
@@ -4345,6 +4440,7 @@ export default async function ProductsPage() {
   return (
     <div>
       <h1>Sản phẩm</h1>
+      <p><small>Cập nhật mỗi 1 giờ</small></p>
       {products.map(product => (
         <div key={product.id}>
           <h2>{product.name}</h2>
@@ -4356,29 +4452,222 @@ export default async function ProductsPage() {
 }
 ```
 
-**Timeline:**
-1. User A truy cập → HTML tĩnh (cũ) được serve ngay lập tức.
-2. Sau 1 giờ, User B truy cập → HTML tĩnh (cũ) vẫn được serve, nhưng Next.js bắt đầu regenerate ở background.
-3. User C truy cập → HTML mới được serve.
+**Timeline (Stale-While-Revalidate Pattern):**
+1. **Build time:** Fetch data → Tạo HTML version 1
+2. **0-59 phút:** Mọi user nhận HTML version 1 (cached, instant)
+3. **Phút 60:** 
+   - User A request → Vẫn nhận HTML version 1 (instant)
+   - Background: Next.js tự động fetch data mới → Tạo HTML version 2
+4. **Phút 61+:** User B request → Nhận HTML version 2
+
+**So sánh ISR vs SSG:**
+
+| Aspect | SSG | ISR |
+|---|---|---|
+| **Build** | Fetch 1 lần | Fetch 1 lần |
+| **Runtime** | Serve static HTML | Serve static HTML **+** auto-regenerate |
+| **Update data** | Phải rebuild manually | Tự động sau X giây |
+| **Performance** | Instant | Instant (vì vẫn serve static) |
 
 ---
 
-#### So sánh 3 chiến lược
+#### So sánh 4 chiến lược
 
-| Chiến lược | Khi fetch data? | Performance | Use case |
-|---|---|---|---|
-| **SSR** | Mỗi request | Chậm hơn | Real-time data |
-| **SSG** | Build time | Cực nhanh | Static content |
-| **ISR** | Build + định kỳ | Nhanh | Semi-static content |
+| Chiến lược | Render ở đâu? | Khi nào fetch? | Performance | SEO | Fresh Data | Use Case |
+|---|---|---|---|---|---|---|
+| **CSR** | Browser | Sau khi JS load | Chậm (initial) | ❌ Kém | ✅ Có (mỗi load) | Dashboard, user-specific UI |
+| **SSR** | Server | Mỗi request | Trung bình | ✅ Tốt | ✅ Luôn fresh | News, personalized + SEO |
+| **SSG** | Server (build) | Build time (1 lần) | ⚡ Cực nhanh | ✅ Tốt | ❌ Static | Blog, docs, landing pages |
+| **ISR** | Server (build + revalidate) | Build + định kỳ | ⚡ Cực nhanh | ✅ Tốt | ⚠️ "Fresh enough" | E-commerce, semi-static content |
 
 ---
 
-### 6. Layout và Metadata
+#### Decision Tree: Chọn chiến lược nào?
+
+```
+Bạn cần SEO?
+│
+├─ KHÔNG → CSR (Client-side rendering với useEffect)
+│
+└─ CÓ → Dữ liệu thay đổi thế nào?
+    │
+    ├─ KHÔNG BAO GIỜ/RẤT ÍT → SSG (Static generation)
+    │
+    ├─ ĐỊNH KỲ (giờ/ngày) → ISR (SSG + revalidation)
+    │
+    └─ MỌI REQUEST (realtime) → SSR (Server-side rendering)
+```
+
+---
+
+#### Kết hợp nhiều chiến lược trong 1 app
+
+**Best Practice:** Sử dụng chiến lược phù hợp cho từng trang.
+
+**Ví dụ 1: Multi-purpose App**
+
+```
+/                    → SSG (Landing page - static)
+/blog                → SSG (Blog list - static)
+/blog/[slug]         → ISR (Blog post - cập nhật khi edit)
+/products            → ISR (Product catalog - cập nhật định kỳ)
+/products/[id]       → ISR (Product detail - revalidate mỗi giờ)
+/dashboard           → CSR (User dashboard - personalized data)
+/stock-ticker        → SSR (Stock prices - realtime)
+/api/user/profile    → API route (Backend cho CSR)
+```
+
+**Ví dụ 2: E-commerce Site (Monorepo - 2 Apps riêng biệt)**
+
+> **Kịch bản:** Cùng 1 database, nhưng 2 Next.js apps riêng biệt:
+> - `apps/public` → Static export (deploy lên hosting)
+> - `apps/admin` → Local-only admin panel (chạy trên laptop)
+
+**Cấu trúc project:**
+
+```
+my-ecommerce/
+├── apps/
+│   ├── public/          → Next.js Public Site (Static Export)
+│   │   ├── app/
+│   │   │   ├── page.js              → SSG (Homepage)
+│   │   │   ├── products/page.js     → SSG (Product list)
+│   │   │   └── products/[slug]/page.js → SSG (Product detail)
+│   │   ├── next.config.js
+│   │   │   output: 'export'  ← Static export
+│   │   └── package.json
+│   │
+│   └── admin/           → Next.js Admin Site (Local Only)
+│       ├── app/
+│       │   ├── page.js              → CSR (Dashboard)
+│       │   ├── products/page.js     → SSR (Product list - fresh data)
+│       │   └── products/[id]/page.js → SSR (Product editor)
+│       ├── next.config.js
+│       │   (no export, runs as dev server)
+│       └── package.json
+│
+└── packages/
+    └── database/        → Shared database client (Prisma/Drizzle)
+        ├── schema.prisma
+        └── client.ts
+```
+
+**Routing Architecture:**
+
+```
+📦 apps/public (Static Site - Deploy lên Vercel/Netlify)
+/                        → SSG (Homepage - static HTML)
+/products                → SSG (Product list - build time data)
+/products/giay-nike      → SSG (Product detail - static HTML cho mỗi product)
+/cart                    → Client-only (localStorage/sessionStorage)
+/checkout                → Client-only (không cần backend)
+
+🔧 apps/admin (Local Dev Server - Chỉ chạy trên laptop)
+http://localhost:3001/                  → CSR (Admin dashboard)
+http://localhost:3001/products          → SSR (Product list - fresh từ DB)
+http://localhost:3001/products/123/edit → SSR (Product editor)
+http://localhost:3001/orders            → SSR (Order management)
+```
+
+**Giải thích luồng hoạt động:**
+
+1. **Admin edit product (Local):**
+   - Mở `http://localhost:3001/products/123/edit`
+   - SSR fetch data từ database → Always fresh
+   - Edit product → Save vào database
+   
+2. **Rebuild public site:**
+   - Admin chạy: `cd apps/public && npm run build`
+   - Next.js fetch tất cả products từ database
+   - Generate static HTML cho mỗi product page
+   - Deploy folder `out/` lên hosting (Vercel/Netlify/S3)
+
+3. **Customer truy cập (Production):**
+   - Truy cập `https://myshop.com/products/giay-nike`
+   - CDN serve static HTML → Instant load ⚡
+   - No server, no database query → Cực nhanh
+
+**So sánh 2 apps:**
+
+| Aspect | `apps/public` | `apps/admin` |
+|---|---|---|
+| **Kiến trúc** | Static Export (`output: 'export'`) | Dev server (`npm run dev`) |
+| **Deploy** | ✅ Deploy lên CDN (Vercel/Netlify) | ❌ Chỉ chạy local |
+| **Database** | ❌ No runtime DB connection | ✅ Direct DB connection |
+| **Rendering** | SSG (build time only) | SSR/CSR (runtime) |
+| **Performance** | ⚡ Instant (static files) | Trung bình (query DB mỗi request) |
+| **Update data** | Rebuild + redeploy | Realtime (query DB) |
+| **Cost** | 🟢 Miễn phí (static hosting) | 🟡 Không deploy (local only) |
+
+**Ưu điểm kiến trúc này:**
+
+✅ **Tách biệt hoàn toàn:** Public site không có backend code, an toàn tuyệt đối  
+✅ **Free hosting:** Static site có thể host miễn phí (Vercel/Netlify/GitHub Pages)  
+✅ **No server costs:** Không cần server chạy 24/7, không tốn tiền database hosting  
+✅ **Admin đơn giản:** Không cần authentication phức tạp (chỉ chạy local)  
+✅ **Performance tối đa:** Customer luôn nhận static HTML (không có API call)
+
+**Trade-offs:**
+
+⚠️ **Manual rebuild:** Mỗi lần update product cần rebuild + redeploy (không tự động như ISR)  
+⚠️ **Build time:** Nếu có 10,000 products → Build lâu (có thể dùng Incremental Static Regeneration nếu cần)  
+⚠️ **Real-time data:** Không phù hợp nếu cần realtime inventory/pricing (stock real-time, flash sale)
+
+---
+
+### 6. Layout và Metadata: Cấu trúc lồng ghép (Nested Structure)
+
+> **Mental Model:** Layout giống như **Hộp Matryoshka (Russian Nesting Dolls)**. Mỗi trang được bao bọc bởi nhiều lớp layout từ ngoài vào trong: Root Layout → Nested Layout → Page.
+
+---
+
+#### 6.0. Hiểu về cấu trúc thư mục và quan hệ cha-con
+
+**Nguyên tắc vàng trong Next.js App Router:**
+
+Mỗi folder có thể chứa 2 file đặc biệt:
+- `layout.js` - Khung bao quanh (wrapper) cho tất cả routes con
+- `page.js` - Nội dung thực sự của route
+
+**Cấu trúc thư mục và kết quả:**
+
+```
+app/
+├── layout.js          → Root Layout (áp dụng cho TẤT CẢ trang)
+├── page.js            → Homepage (/)
+│
+├── blog/
+│   ├── layout.js      → Blog Layout (chỉ áp dụng cho /blog/*)
+│   ├── page.js        → Blog list (/blog)
+│   │
+│   └── [slug]/
+│       └── page.js    → Blog post (/blog/react-intro)
+│
+└── products/
+    ├── page.js        → Product list (/products)
+    │
+    └── [id]/
+        └── page.js    → Product detail (/products/123)
+```
+
+**Quy tắc áp dụng:**
+
+| URL | Layouts được áp dụng (ngoài → trong) | Page |
+|---|---|---|
+| `/` | `app/layout.js` | `app/page.js` |
+| `/blog` | `app/layout.js` → `app/blog/layout.js` | `app/blog/page.js` |
+| `/blog/react-intro` | `app/layout.js` → `app/blog/layout.js` | `app/blog/[slug]/page.js` |
+| `/products` | `app/layout.js` | `app/products/page.js` |
+| `/products/123` | `app/layout.js` | `app/products/[id]/page.js` |
+
+---
 
 #### 6.1. Root Layout (Bắt buộc)
 
+**Root Layout** là lớp ngoài cùng, bao quanh **TẤT CẢ** các trang trong ứng dụng.
+
 ```jsx
-// src/app/layout.js
+// app/layout.js (Root Layout)
 
 export const metadata = {
   title: 'My Next.js App',
@@ -4391,11 +4680,13 @@ export default function RootLayout({ children }) {
       <body>
         <header>
           <nav>
-            {/* Navigation */}
+            <a href="/">Home</a>
+            <a href="/blog">Blog</a>
+            <a href="/products">Products</a>
           </nav>
         </header>
         
-        <main>{children}</main>
+        <main>{children}</main> {/* ← Đây là "lỗ hổng" cho nội dung */}
         
         <footer>
           <p>&copy; 2026 My App</p>
@@ -4407,37 +4698,267 @@ export default function RootLayout({ children }) {
 ```
 
 **Đặc điểm:**
-- `children` = nội dung của `page.js`.
-- Layout này bao quanh **TẤT CẢ** các trang.
+- ✅ **Bắt buộc**: Mọi Next.js app phải có `app/layout.js`
+- ✅ **Luôn render**: Header/Footer hiện ở mọi trang
+- ✅ **Props `children`**: Là placeholder cho nội dung con (nested layout hoặc page)
+
+**`children` là gì?**
+
+Khi user truy cập `/blog`, React sẽ render:
+
+```jsx
+<RootLayout>
+  {/* children = BlogLayout hoặc BlogPage */}
+  <BlogLayout>
+    <BlogPage />
+  </BlogLayout>
+</RootLayout>
+```
 
 ---
 
-#### 6.2. Nested Layout
+#### 6.2. Nested Layout (Layout con)
+
+**Nested Layout** chỉ áp dụng cho một nhóm routes cụ thể.
 
 ```jsx
-// src/app/blog/layout.js
+// app/blog/layout.js (Blog Layout)
 
 export default function BlogLayout({ children }) {
   return (
     <div style={{ display: 'flex' }}>
       {/* Sidebar chỉ hiện trong /blog/* */}
-      <aside style={{ width: '200px' }}>
+      <aside style={{ width: '200px', background: '#f0f0f0' }}>
         <h3>Categories</h3>
         <ul>
-          <li>Tech</li>
-          <li>Lifestyle</li>
+          <li><a href="/blog?category=tech">Tech</a></li>
+          <li><a href="/blog?category=lifestyle">Lifestyle</a></li>
         </ul>
       </aside>
       
-      <div style={{ flex: 1 }}>
-        {children}  {/* Nội dung của /blog/page.js hoặc /blog/[id]/page.js */}
+      <div style={{ flex: 1, padding: '20px' }}>
+        {children}  {/* ← Blog page content */}
       </div>
     </div>
   );
 }
 ```
 
-**Kết quả:** Sidebar chỉ hiện ở `/blog` và `/blog/123`, không hiện ở `/about`.
+**Kết quả render khi truy cập `/blog`:**
+
+```
+┌─────────────────────────────────────┐
+│ Header (Root Layout)                │ ← app/layout.js
+├─────────────────────────────────────┤
+│ ┌─────────┬─────────────────────┐   │
+│ │Categories│ Blog List (Page)   │   │ ← app/blog/layout.js + page.js
+│ │         │                     │   │
+│ │ - Tech  │ • React intro       │   │
+│ │ - Life  │ • Next.js guide     │   │
+│ └─────────┴─────────────────────┘   │
+├─────────────────────────────────────┤
+│ Footer (Root Layout)                │ ← app/layout.js
+└─────────────────────────────────────┘
+```
+
+**Kết quả render khi truy cập `/products` (không có blog layout):**
+
+```
+┌─────────────────────────────────────┐
+│ Header (Root Layout)                │ ← app/layout.js
+├─────────────────────────────────────┤
+│ Product List (Page)                 │ ← app/products/page.js
+│                                     │    (KHÔNG có sidebar)
+│ • Product 1                         │
+│ • Product 2                         │
+├─────────────────────────────────────┤
+│ Footer (Root Layout)                │ ← app/layout.js
+└─────────────────────────────────────┘
+```
+
+---
+
+#### 6.3. Composition Flow: Hiểu về luồng lồng ghép
+
+**Ví dụ: User truy cập `/blog/react-intro`**
+
+**1. Next.js tìm file theo thứ tự:**
+
+```
+app/layout.js               ✅ Tìm thấy (Root Layout)
+app/blog/layout.js          ✅ Tìm thấy (Blog Layout)  
+app/blog/[slug]/page.js     ✅ Tìm thấy (Blog Post Page)
+```
+
+**2. React compose components (ngoài → trong):**
+
+```jsx
+// Kết quả cuối cùng (pseudo-code)
+<RootLayout>              {/* app/layout.js */}
+  <html>
+    <body>
+      <header>...</header>
+      <main>
+        <BlogLayout>      {/* app/blog/layout.js */}
+          <div style={{ display: 'flex' }}>
+            <aside>Sidebar</aside>
+            <div>
+              <BlogPostPage />  {/* app/blog/[slug]/page.js */}
+            </div>
+          </div>
+        </BlogLayout>
+      </main>
+      <footer>...</footer>
+    </body>
+  </html>
+</RootLayout>
+```
+
+**3. Cách `children` được truyền:**
+
+```jsx
+// Bước 1: RootLayout render
+<RootLayout children={<BlogLayout>...</BlogLayout>} />
+
+// Bước 2: BlogLayout render
+<BlogLayout children={<BlogPostPage />} />
+
+// Bước 3: BlogPostPage render
+<BlogPostPage /> // Không có children (leaf node)
+```
+
+---
+
+#### 6.4. Layout trong Monorepo (apps/public vs apps/admin)
+
+**Kịch bản:** Cùng database nhưng 2 apps có layout khác nhau.
+
+**apps/public/app/layout.js (Customer Site):**
+
+```jsx
+// Minimal, SEO-focused, clean UI
+export default function PublicRootLayout({ children }) {
+  return (
+    <html lang="vi">
+      <body>
+        <header className="sticky-header">
+          <nav>
+            <Logo />
+            <SearchBar />
+            <CartIcon />
+          </nav>
+        </header>
+        <main>{children}</main>
+        <footer>
+          <SocialLinks />
+          <ContactInfo />
+        </footer>
+      </body>
+    </html>
+  );
+}
+```
+
+**apps/admin/app/layout.js (Admin Panel):**
+
+```jsx
+// Sidebar navigation, no SEO needed
+export default function AdminRootLayout({ children }) {
+  return (
+    <html lang="vi">
+      <body>
+        <div style={{ display: 'flex', height: '100vh' }}>
+          {/* Sidebar cố định */}
+          <aside style={{ width: '250px', background: '#2c3e50' }}>
+            <h2>Admin Panel</h2>
+            <nav>
+              <a href="/products">Products</a>
+              <a href="/orders">Orders</a>
+              <a href="/customers">Customers</a>
+            </nav>
+          </aside>
+          
+          {/* Content area */}
+          <main style={{ flex: 1, padding: '20px' }}>
+            {children}
+          </main>
+        </div>
+      </body>
+    </html>
+  );
+}
+```
+
+**So sánh layouts:**
+
+| Aspect | `apps/public/app/layout.js` | `apps/admin/app/layout.js` |
+|---|---|---|
+| **Header** | Logo + Search + Cart | Sidebar navigation |
+| **Footer** | ✅ Social links, contact | ❌ Không cần |
+| **SEO** | ✅ Metadata, structured data | ❌ Không quan trọng |
+| **Styling** | Clean, customer-friendly | Functional, admin-focused |
+
+---
+
+#### 6.5. Nested Layout trong Admin App
+
+**apps/admin/app/products/layout.js:**
+
+```jsx
+// Layout riêng cho product management
+export default function ProductLayout({ children }) {
+  return (
+    <div>
+      {/* Breadcrumb */}
+      <nav>
+        <a href="/admin">Dashboard</a> / <span>Products</span>
+      </nav>
+      
+      {/* Action bar */}
+      <div style={{ marginBottom: '20px' }}>
+        <button>+ Add New Product</button>
+        <button>Export CSV</button>
+      </div>
+      
+      {/* Content */}
+      {children}
+    </div>
+  );
+}
+```
+
+**Kết quả khi truy cập `localhost:3001/products`:**
+
+```
+┌──────────────────────────────────────────────┐
+│ Admin Panel (Root Layout Sidebar)           │
+│ ┌──────────────────────────────────────────┐ │
+│ │ Dashboard / Products (Breadcrumb)        │ │ ← products/layout.js
+│ │ [+ Add] [Export]                         │ │ ← products/layout.js
+│ │ ────────────────────────────────────────│ │
+│ │ Product List (Page content)              │ │ ← products/page.js
+│ │ • Nike Shoes - $100                      │ │
+│ │ • Adidas Shirt - $50                     │ │
+│ └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+#### 6.6. Best Practices cho Layout
+
+✅ **DO:**
+- Đặt navigation, header, footer trong Root Layout
+- Dùng nested layout cho shared UI trong một section (ví dụ: blog sidebar)
+- Truyền metadata riêng cho từng layout
+- Tận dụng `children` để tái sử dụng code
+
+❌ **DON'T:**
+- Duplicate header/footer ở mỗi page (dùng layout thay vì)
+- Fetch data trong layout (dùng Server Components trong page thay vì)
+- Nest quá nhiều layout (tối đa 3 levels: Root → Section → Sub-section)
+
+---
 
 ---
 
@@ -5476,6 +5997,7 @@ export default function Cart() {
 - ✅ JWT tokens
 - ✅ Database integration
 
+---
 ##### A. Cài đặt
 
 ```bash
@@ -5680,7 +6202,272 @@ export async function GET(request) {
     user: session.user
   });
 }
+
 ```
+
+---
+
+#### 11.3. Deep Dive: Cơ chế Session Authentication (Browser ↔ Server)
+
+> **Mental Model:** Session giống như **Vé xem phim**. Khi vào rạp (login), bạn nhận vé (cookie). Mỗi lần vào phòng chiếu (request), bạn đưa vé → nhân viên check (server validate) → cho vào.
+
+Trước khi học NextAuth.js, cần hiểu bản chất của session authentication ở mức HTTP. Đây là kiến thức nền tảng áp dụng cho mọi framework.
+
+---
+
+##### A. Trước khi đăng nhập: Mọi request đều "ẩn danh"
+
+**Browser → Server**
+
+Khi visitor mới mở site lần đầu:
+
+```http
+GET /dashboard HTTP/1.1
+Host: example.com
+```
+
+**Vấn đề:** Không có cookie, server không biết bạn là ai.
+
+**Server → Browser**
+
+Server phản hồi:
+- Hiển thị trang public, hoặc
+- Redirect về trang login:
+
+```http
+HTTP/1.1 302 Found
+Location: /login
+```
+
+---
+
+##### B. Bước đăng nhập: Server tạo Session
+
+User submit form đăng nhập (hoặc hoàn tất Google login callback).
+
+**Browser → Server**
+
+```http
+POST /login HTTP/1.1
+Host: example.com
+Content-Type: application/x-www-form-urlencoded
+
+email=phuong@example.com&password=....
+```
+
+**Server internal actions (quan trọng)**
+
+Server thực hiện:
+
+1. **Verify credentials** (hoặc verify Google identity)
+2. **Tạo session object** trong server storage (DB/Redis/memory):
+
+```javascript
+// Example internal storage
+session_id = "a8f3c9...random..."  // Random string (không có ý nghĩa)
+
+session_store[a8f3c9...] = {
+  user_id: 123,
+  created_at: "2026-01-31T10:00:00Z",
+  expires_at: "2026-02-07T10:00:00Z",  // 7 ngày sau
+  roles: ["admin"]
+}
+```
+
+> **Key point:** `session_id` chỉ là khóa random, vô nghĩa nếu đứng riêng. Giá trị thật nằm trong `session_store`.
+
+**Server → Browser (Set-Cookie)**
+
+Server reply với header `Set-Cookie`:
+
+```http
+HTTP/1.1 302 Found
+Set-Cookie: session_id=a8f3c9...; Path=/; HttpOnly; Secure; SameSite=Lax
+Location: /dashboard
+```
+
+Browser lưu cookie này.
+
+**Cookie properties (nền tảng bảo mật):**
+
+| Property | Ý nghĩa | Tại sao quan trọng |
+|---|---|---|
+| `HttpOnly` | JavaScript không thể đọc cookie | ✅ Reduce XSS theft (nếu hacker inject JS, không lấy được cookie) |
+| `Secure` | Chỉ gửi qua HTTPS | ✅ Prevent man-in-the-middle attacks (HTTP plain text) |
+| `SameSite=Lax` | Cookie không gửi từ external sites | ✅ Reduce CSRF (Cross-Site Request Forgery) |
+| `Path=/` | Cookie gửi cho tất cả routes | ✅ Apply to whole app |
+
+---
+
+##### C. Sau khi đăng nhập: Browser tự động gửi Cookie mọi request
+
+User truy cập `/dashboard`.
+
+**Browser → Server (Automatic)**
+
+Browser **tự động** gắn cookie vào request:
+
+```http
+GET /dashboard HTTP/1.1
+Host: example.com
+Cookie: session_id=a8f3c9...
+```
+
+> **Quan trọng:** Developer không cần code gì. Browser engine tự làm.
+
+**Server internal actions**
+
+Server:
+
+1. Đọc `session_id` từ cookie header
+2. Lookup trong session store: `session_store[a8f3c9...]`
+3. Lấy được `user_id=123`
+4. Load user data/roles nếu cần
+5. Allow access
+
+**Server → Browser**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+<!DOCTYPE html>
+<html>
+  <h1>Welcome, Phuong!</h1>
+  ...
+</html>
+```
+
+**Từ giờ trở đi, mọi request đều có "chứng minh":**
+- Cookie chứa `session_id`
+- Server map nó về user
+
+---
+
+##### D. Session Expiration: Cơ chế "tự động đăng xuất"
+
+Sessions có thời hạn sử dụng:
+
+**1. Server-side expiry**
+
+```javascript
+session_store[a8f3c9...] = {
+  expires_at: "2026-02-07T10:00:00Z"  // 7 ngày
+}
+```
+
+**2. Cookie expiry (optional)**
+
+```http
+Set-Cookie: session_id=a8f3c9...; Expires=Fri, 07 Feb 2026 10:00:00 GMT
+```
+
+hoặc dùng **session cookie** (xóa khi đóng browser):
+
+```http
+Set-Cookie: session_id=a8f3c9...; (no Expires)
+```
+
+**Validation mỗi request:**
+
+```javascript
+// Server checks
+if (session.expires_at < now) {
+  // Session expired → Treat as logged out
+  redirect('/login');
+}
+```
+
+---
+
+##### E. Logout: Cách hoạt động
+
+Logout phải làm **2 việc**:
+
+**1. Kill server-side session**
+
+```javascript
+// Delete from storage
+delete session_store[a8f3c9...];
+```
+
+**2. Remove cookie in browser**
+
+Server gửi header xóa cookie:
+
+```http
+HTTP/1.1 302 Found
+Set-Cookie: session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+Location: /login
+```
+
+> **Tại sao phải làm cả 2?**  
+> - Nếu chỉ xóa cookie → Hacker có backup cookie vẫn dùng được (server vẫn có session)
+> - Nếu chỉ xóa server session → Cookie vẫn gửi lên (dù server reject)  
+> → **Phải xóa cả 2** để đảm bảo an toàn
+
+---
+
+##### F. Tại sao gọi là "Stateful" Authentication?
+
+Because server phải **giữ trạng thái (state)**:
+- Một table/store chứa sessions (`session_id` → `user_data`)
+- Validation yêu cầu lookup (database/Redis query)
+
+**Thách thức với nhiều servers:**
+
+```
+        Load Balancer
+           ↓
+    ┌──────┴──────┐
+    ↓             ↓
+Server 1      Server 2      Server 3
+```
+
+**Vấn đề:** User login ở Server 1 → Session lưu ở Server 1.  
+Nhưng request tiếp theo → Load balancer route về Server 2 → **Không tìm thấy session!**
+
+**Giải pháp:** Dùng **shared session store** (Redis, database):
+
+```
+Server 1 ──┐
+Server 2 ──┼──→ Redis (shared session store)
+Server 3 ──┘
+```
+
+Tất cả servers đều đọc/ghi vào cùng 1 Redis → Session works across servers.
+
+---
+
+##### G. Mental Model đơn giản nhất
+
+> **Cookie = Chìa khóa (`session_id`)**  
+> **Server = Tủ khóa (session store)**
+
+**Mỗi request:**
+1. Browser đưa chìa khóa (cookie)
+2. Server mở tủ khóa (lookup session)
+3. Biết bạn là ai → Cho phép truy cập
+
+**Khi logout:**
+1. Server vứt chìa khóa (delete session)
+2. Browser quên chìa khóa (delete cookie)
+
+---
+
+##### H. So sánh: Stateful vs Stateless (JWT)
+
+| Aspect | Stateful Session (Cookie-based) | Stateless JWT (Token-based) |
+|---|---|---|
+| **Storage** | Server lưu session (DB/Redis) | Không lưu gì, tất cả info trong token |
+| **Validation** | Lookup database mỗi request | Chỉ verify signature (không query DB) |
+| **Logout** | Xóa session từ DB | Không thể "xóa" token (phải đợi expire) |
+| **Scalability** | Cần shared storage (Redis) | Dễ scale (stateless) |
+| **Security** | Revoke ngay lập tức (xóa session) | Không revoke được (token còn hạn vẫn valid) |
+
+**Khi nào dùng gì?**
+- **Stateful Session:** Web apps truyền thống, cần revoke tức thì (admin ban user)
+- **JWT:** Mobile apps, microservices, không cần revoke ngay
 
 ---
 
