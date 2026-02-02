@@ -1,0 +1,56 @@
+[
+  {
+    "_id": "698076d356871c89364c6871",
+    "name": "Rotary Vane Pumps",
+    "slug": "rotary-vane",
+    "description": "Oil-sealed rotary vane vacuum pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.674Z",
+    "updatedAt": "2026-02-02T10:05:07.674Z"
+  },
+  {
+    "_id": "698076d356871c89364c6872",
+    "name": "Scroll Pumps",
+    "slug": "scroll",
+    "description": "Oil-free scroll vacuum pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.675Z",
+    "updatedAt": "2026-02-02T10:05:07.675Z"
+  },
+  {
+    "_id": "698076d356871c89364c6873",
+    "name": "Diaphragm Pumps",
+    "slug": "diaphragm",
+    "description": "Chemical-resistant diaphragm pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.675Z",
+    "updatedAt": "2026-02-02T10:05:07.675Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebd1",
+    "slug": "turbomolecular",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:23:35.822Z",
+    "description": "Ultra-high vacuum turbomolecular pumps",
+    "name": "Turbomolecular Pumps",
+    "updatedAt": "2026-02-02T10:23:35.822Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebd3",
+    "slug": "roots",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:23:35.881Z",
+    "description": "Vacuum boosting roots blowers",
+    "name": "Roots Pumps",
+    "updatedAt": "2026-02-02T10:23:35.881Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebd5",
+    "slug": "liquid-ring",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:23:35.883Z",
+    "description": "Wet gas handling liquid ring pumps",
+    "name": "Liquid Ring Pumps",
+    "updatedAt": "2026-02-02T10:23:35.883Z"
+  }
+]

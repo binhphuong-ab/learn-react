@@ -1,0 +1,212 @@
+[
+  {
+    "_id": "698076d356871c89364c6875",
+    "name": "RV-100 Rotary Vane Pump",
+    "slug": "rv-100-rotary-vane-pump",
+    "summary": "High-performance oil-sealed rotary vane vacuum pump for industrial applications.",
+    "description": "The RV-100 is a robust and reliable rotary vane vacuum pump designed for demanding industrial environments. Features include:\n\n- Direct drive motor for quiet operation\n- Gas ballast valve for handling condensable vapors\n- Anti-suckback valve included\n- Easy maintenance with accessible oil fill and drain",
+    "images": [
+      "/images/rv-100.jpg"
+    ],
+    "specs": {
+      "Flow Rate": "100 m³/h",
+      "Ultimate Pressure": "0.5 mbar",
+      "Motor Power": "2.2 kW",
+      "Weight": "45 kg"
+    },
+    "price": 25000000,
+    "category": "Rotary Vane Pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.756Z",
+    "updatedAt": "2026-02-02T10:05:07.756Z"
+  },
+  {
+    "_id": "698076d356871c89364c6876",
+    "name": "RV-250 Rotary Vane Pump",
+    "slug": "rv-250-rotary-vane-pump",
+    "summary": "Large capacity rotary vane pump for high-volume vacuum applications.",
+    "description": "The RV-250 delivers exceptional pumping performance for large-scale vacuum systems. Ideal for packaging, food processing, and industrial manufacturing.\n\n- Heavy-duty construction for 24/7 operation\n- Integrated oil mist filter\n- Low noise design\n- Compatible with vacuum boosters",
+    "images": [
+      "/images/rv-250.jpg"
+    ],
+    "specs": {
+      "Flow Rate": "250 m³/h",
+      "Ultimate Pressure": "0.1 mbar",
+      "Motor Power": "5.5 kW",
+      "Weight": "120 kg"
+    },
+    "price": 55000000,
+    "category": "Rotary Vane Pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.757Z",
+    "updatedAt": "2026-02-02T10:05:07.757Z"
+  },
+  {
+    "_id": "698076d356871c89364c6877",
+    "name": "SC-50 Scroll Pump",
+    "slug": "sc-50-scroll-pump",
+    "summary": "Oil-free scroll vacuum pump for clean process applications.",
+    "description": "The SC-50 provides clean, dry vacuum without oil contamination. Perfect for laboratories, semiconductor manufacturing, and pharmaceutical applications.\n\n- 100% oil-free operation\n- Low vibration design\n- Compact footprint\n- Maintenance-free scroll mechanism",
+    "images": [
+      "/images/sc-50.jpg"
+    ],
+    "specs": {
+      "Flow Rate": "50 m³/h",
+      "Ultimate Pressure": "0.01 mbar",
+      "Motor Power": "1.5 kW",
+      "Weight": "35 kg"
+    },
+    "price": 45000000,
+    "category": "Scroll Pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.757Z",
+    "updatedAt": "2026-02-02T10:05:07.757Z"
+  },
+  {
+    "_id": "698076d356871c89364c6878",
+    "name": "DP-20 Diaphragm Pump",
+    "slug": "dp-20-diaphragm-pump",
+    "summary": "Chemical-resistant diaphragm pump for corrosive gas handling.",
+    "description": "The DP-20 is specifically designed for pumping corrosive and aggressive gases. PTFE-coated diaphragm and wetted parts provide excellent chemical resistance.\n\n- PTFE diaphragm and valves\n- Suitable for corrosive vapors\n- Self-priming design\n- Explosion-proof options available",
+    "images": [
+      "/images/dp-20.jpg"
+    ],
+    "specs": {
+      "Flow Rate": "20 m³/h",
+      "Ultimate Pressure": "2 mbar",
+      "Motor Power": "0.25 kW",
+      "Weight": "8 kg"
+    },
+    "price": 15000000,
+    "category": "Diaphragm Pumps",
+    "__v": 0,
+    "createdAt": "2026-02-02T10:05:07.757Z",
+    "updatedAt": "2026-02-02T10:05:07.757Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebd7",
+    "slug": "rv-500-industrial-rotary-vane-pump",
+    "__v": 0,
+    "category": "Rotary Vane Pumps",
+    "createdAt": "2026-02-02T10:23:35.885Z",
+    "description": "The RV-500 is engineered for demanding 24/7 industrial applications. Built with premium materials for maximum durability.\n\n- Forced oil lubrication system\n- Built-in cooling fan\n- Vibration-dampening mounts\n- Extended service intervals",
+    "images": [
+      "/images/rv-500.jpg"
+    ],
+    "name": "RV-500 Industrial Rotary Vane Pump",
+    "price": 120000000,
+    "specs": {
+      "Flow Rate": "500 m³/h",
+      "Ultimate Pressure": "0.05 mbar",
+      "Motor Power": "11 kW",
+      "Weight": "280 kg"
+    },
+    "summary": "Heavy-duty industrial vacuum pump for continuous operation.",
+    "updatedAt": "2026-02-02T10:23:35.885Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebd9",
+    "slug": "sc-100-scroll-pump",
+    "__v": 0,
+    "category": "Scroll Pumps",
+    "createdAt": "2026-02-02T10:23:35.894Z",
+    "description": "The SC-100 delivers superior oil-free vacuum performance for critical processes requiring zero contamination.\n\n- Hermetically sealed scroll mechanism\n- Ultra-quiet operation (<55 dB)\n- Integrated controller\n- Remote monitoring capability",
+    "images": [
+      "/images/sc-100.jpg"
+    ],
+    "name": "SC-100 Scroll Pump",
+    "price": 85000000,
+    "specs": {
+      "Flow Rate": "100 m³/h",
+      "Ultimate Pressure": "0.008 mbar",
+      "Motor Power": "3 kW",
+      "Weight": "65 kg"
+    },
+    "summary": "High-capacity oil-free scroll pump for demanding clean applications.",
+    "updatedAt": "2026-02-02T10:23:35.894Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebdb",
+    "slug": "dp-50-chemical-diaphragm-pump",
+    "__v": 0,
+    "category": "Diaphragm Pumps",
+    "createdAt": "2026-02-02T10:23:35.897Z",
+    "description": "The DP-50 handles the most corrosive gases with its fully PTFE-coated flow path and robust diaphragm design.\n\n- Full PTFE wetted parts\n- Dual-stage design for deeper vacuum\n- ATEX certified options\n- Solvent recovery compatible",
+    "images": [
+      "/images/dp-50.jpg"
+    ],
+    "name": "DP-50 Chemical Diaphragm Pump",
+    "price": 28000000,
+    "specs": {
+      "Flow Rate": "50 m³/h",
+      "Ultimate Pressure": "1 mbar",
+      "Motor Power": "0.55 kW",
+      "Weight": "18 kg"
+    },
+    "summary": "High-flow chemical-resistant pump for aggressive gas applications.",
+    "updatedAt": "2026-02-02T10:23:35.897Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebdd",
+    "slug": "tb-1000-turbomolecular-pump",
+    "__v": 0,
+    "category": "Turbomolecular Pumps",
+    "createdAt": "2026-02-02T10:23:35.901Z",
+    "description": "The TB-1000 achieves ultra-high vacuum levels required for advanced research and semiconductor manufacturing.\n\n- Magnetic bearing technology\n- No oil backstreaming\n- Integrated controller\n- USB and RS-485 interfaces",
+    "images": [
+      "/images/tb-1000.jpg"
+    ],
+    "name": "TB-1000 Turbomolecular Pump",
+    "price": 350000000,
+    "specs": {
+      "Pumping Speed": "1000 L/s (N2)",
+      "Ultimate Pressure": "10⁻¹⁰ mbar",
+      "Rotation Speed": "36,000 rpm",
+      "Weight": "25 kg"
+    },
+    "summary": "Ultra-high vacuum turbomolecular pump for research and semiconductor applications.",
+    "updatedAt": "2026-02-02T10:23:35.901Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebdf",
+    "slug": "rp-300-roots-pump",
+    "__v": 0,
+    "category": "Roots Pumps",
+    "createdAt": "2026-02-02T10:23:35.904Z",
+    "description": "The RP-300 roots pump dramatically increases pumping speed when combined with backing pumps.\n\n- Oil-free compression chamber\n- Timing gear synchronized rotors\n- Air or water cooling options\n- Variable speed drive ready",
+    "images": [
+      "/images/rp-300.jpg"
+    ],
+    "name": "RP-300 Roots Pump",
+    "price": 75000000,
+    "specs": {
+      "Pumping Speed": "300 m³/h",
+      "Max Differential Pressure": "50 mbar",
+      "Motor Power": "2.2 kW",
+      "Weight": "85 kg"
+    },
+    "summary": "High-performance roots blower for vacuum boosting applications.",
+    "updatedAt": "2026-02-02T10:23:35.904Z"
+  },
+  {
+    "_id": "69807b272fbbc009ece4ebe1",
+    "slug": "lp-200-liquid-ring-pump",
+    "__v": 0,
+    "category": "Liquid Ring Pumps",
+    "createdAt": "2026-02-02T10:23:35.907Z",
+    "description": "The LP-200 excels in applications involving moisture, dust, and condensable vapors where other pumps would fail.\n\n- Handles wet gases directly\n- No metal-to-metal contact\n- Self-cleaning action\n- Stainless steel construction available",
+    "images": [
+      "/images/lp-200.jpg"
+    ],
+    "name": "LP-200 Liquid Ring Pump",
+    "price": 65000000,
+    "specs": {
+      "Flow Rate": "200 m³/h",
+      "Ultimate Pressure": "33 mbar",
+      "Motor Power": "4 kW",
+      "Weight": "150 kg"
+    },
+    "summary": "Robust liquid ring vacuum pump for wet and dusty environments.",
+    "updatedAt": "2026-02-02T10:23:35.907Z"
+  }
+]

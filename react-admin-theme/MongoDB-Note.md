@@ -1,0 +1,5 @@
+- Version: mongod v7.0.22
+- Service: mongodb-community@7.0 is started via Homebrew
+- Data path: /opt/homebrew/var/mongodb
+- Log path: /opt/homebrew/var/log/mongodb/mongo.log
+- Connect: mongosh "mongodb://localhost:27017"
