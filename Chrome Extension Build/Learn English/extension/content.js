@@ -287,6 +287,7 @@ function createTooltip(selection, anchorRect) {
     <div class="le-body">
       <p class="le-definition">Fetching definition...</p>
       <p class="le-example"></p>
+      <p class="le-synonyms"></p>
       <div class="le-actions"></div>
       <p class="le-status"></p>
     </div>
@@ -324,11 +325,23 @@ function renderLookup(selection, lookup) {
   const phonetic = tooltipEl.querySelector(".le-phonetic");
   const definition = tooltipEl.querySelector(".le-definition");
   const example = tooltipEl.querySelector(".le-example");
+  const synonyms = tooltipEl.querySelector(".le-synonyms");
   const actions = tooltipEl.querySelector(".le-actions");
+  const status = tooltipEl.querySelector(".le-status");
+
+  const shortDefinition = lookup.shortDefinition || lookup.meanings?.[0]?.definition || "";
+  const examples = Array.isArray(lookup.examples) ? lookup.examples.filter(Boolean) : [];
+  const exampleText = lookup.example || examples[0] || "";
+  const synonymList = Array.isArray(lookup.synonyms) ? lookup.synonyms.filter(Boolean).slice(0, 5) : [];
 
   phonetic.textContent = lookup.phonetic || "Pronunciation unavailable";
-  definition.textContent = lookup.shortDefinition || "No definition found";
-  example.textContent = lookup.example ? `Example: ${lookup.example}` : "";
+  definition.textContent = shortDefinition || "No definition found";
+  example.textContent = exampleText ? `Example: ${exampleText}` : "";
+  synonyms.textContent = synonymList.length ? `Synonyms: ${synonymList.join(", ")}` : "";
+  if (status) {
+    status.textContent = lookup.matchedTerm ? `Using base form: ${lookup.matchedTerm}` : "";
+    status.style.color = "#14532d";
+  }
 
   actions.innerHTML = "";
 
@@ -355,11 +368,13 @@ function renderLookupError(selection, message) {
   const phonetic = tooltipEl.querySelector(".le-phonetic");
   const definition = tooltipEl.querySelector(".le-definition");
   const example = tooltipEl.querySelector(".le-example");
+  const synonyms = tooltipEl.querySelector(".le-synonyms");
   const actions = tooltipEl.querySelector(".le-actions");
 
   phonetic.textContent = "";
   definition.textContent = message || "Dictionary unavailable";
   example.textContent = "";
+  synonyms.textContent = "";
 
   actions.innerHTML = "";
   const manualButton = document.createElement("button");
@@ -392,12 +407,13 @@ function loadDefinition(selection) {
 }
 
 function saveToLibrary(selection, lookup) {
+  const exampleFromLookup = lookup.example || (Array.isArray(lookup.examples) ? lookup.examples[0] : "") || "";
   const payload = {
     term: selection.term,
     pronunciation: lookup.phonetic || "",
     audioUrl: lookup.audioUrl || "",
     meaning: lookup.shortDefinition || "",
-    examples: lookup.example ? [lookup.example] : [],
+    examples: exampleFromLookup ? [exampleFromLookup] : [],
     sourceUrl: selection.sourceUrl,
     sourceTitle: selection.sourceTitle,
     context: selection.context,
@@ -506,4 +522,13 @@ window.addEventListener("scroll", () => {
   const pos = positionWithinViewport(currentSelection.rect.right + 6, currentSelection.rect.top - 4, 28, 28);
   iconEl.style.left = `${pos.left}px`;
   iconEl.style.top = `${pos.top}px`;
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "GET_SELECTION_TEXT") {
+    return undefined;
+  }
+
+  sendResponse({ text: window.getSelection()?.toString() || "" });
+  return undefined;
 });

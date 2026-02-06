@@ -11,6 +11,7 @@
     "dev:api": "npm run dev -w api",
     "dev:dashboard": "npm run dev -w dashboard",
     "build": "npm run build -w dashboard",
-    "start:api": "npm run start -w api"
+    "start:api": "npm run start -w api",
+    "safari:convert": "bash scripts/create-safari-project.sh"
   }
 }

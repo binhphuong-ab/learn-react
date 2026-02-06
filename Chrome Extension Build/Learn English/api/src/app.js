@@ -19,7 +19,11 @@ export function createApp({ io, dictionaryService, dashboardOrigin }) {
           return callback(null, true);
         }
 
-        if (origin === dashboardOrigin || origin.startsWith("chrome-extension://")) {
+        if (
+          origin === dashboardOrigin ||
+          origin.startsWith("chrome-extension://") ||
+          origin.startsWith("safari-web-extension://")
+        ) {
           return callback(null, true);
         }
 

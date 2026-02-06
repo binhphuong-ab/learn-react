@@ -59,6 +59,12 @@
   color: #39362b;
 }
 
+#learn-english-tooltip .le-synonyms {
+  margin: -6px 0 12px;
+  font-size: 12px;
+  color: #4b4739;
+}
+
 #learn-english-tooltip .le-actions {
   display: flex;
   gap: 8px;

@@ -1,7 +1,7 @@
-# PRD: Learn English Chrome Extension (Personal, Local)
+# PRD: Learn English Chrome Extension (Personal, Synced)
 
 ## 1. Overview
-A personal-use Chrome extension that helps me learn English while browsing. It captures words/phrases I select, lets me store notes and translations, schedules reviews (spaced repetition), and provides lightweight practice inside the browser. The extension runs locally and stores data in a local MongoDB instance.
+A personal-use Chrome extension that helps me learn English while browsing. It captures words/phrases I select, lets me store notes and translations, schedules reviews (spaced repetition), and provides lightweight practice inside the browser. The extension runs locally, while data is stored in MongoDB Atlas for cross-device sync.
 
 ## 2. Goals
 - Capture selected words/phrases quickly from any webpage.
@@ -9,12 +9,12 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 - Build a personal vocabulary list with definitions, examples, and tags.
 - Review vocabulary using a simple spaced-repetition flow.
 - **View learning progress** and timeline in a web dashboard (localhost:8082).
-- Keep everything local (no cloud sync).
+- Sync vocabulary data across multiple devices via MongoDB Atlas.
 - Simple, fast UX suitable for daily use.
 
 ## 3. Non-Goals
 - No multi-user support.
-- No cloud sync or remote backups (optional export only).
+- No team/shared workspace features (single account usage only).
 - No advanced AI tutoring or speech recognition in v1.
 
 ## 4. Target User
@@ -47,7 +47,7 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
   - **Meaning/definition** (fetched from dictionary API).
   - **Example sentence** from dictionary.
   - **"Save to Library"** button for quick-add.
-- **Dictionary API integration**: Free Dictionary API (https://dictionaryapi.dev).
+- **Dictionary API integration**: WordsAPI via RapidAPI (`wordsapiv1.p.rapidapi.com`).
 - **Fallback**: If API fails or offline, show "Add manually" option.
 - **Auto-cache**: Store fetched definitions in MongoDB to reduce API calls.
 - Icon and tooltip disappear on click-away or ESC key.
@@ -87,7 +87,7 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 
 ### 6.7 Settings
 - Review settings (daily limit, default intervals).
-- Default dictionary API preference.
+- Dictionary API connection settings (RapidAPI host/key via env).
 - Keyboard shortcuts configuration.
 
 ## 7. Suggested Solution
@@ -100,16 +100,21 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 - **Local Node.js API server (Express) - localhost:8083**
   - Runs on `localhost:8083` and connects to MongoDB.
   - REST endpoints for vocab CRUD, review updates, and export/import.
-  - **Dictionary API proxy**: Calls Free Dictionary API and caches results.
-  - Serves audio files for pronunciation.
+  - **Dictionary API proxy**: Calls WordsAPI via RapidAPI and caches results.
+  - Returns definition, examples, synonyms, and pronunciation text.
 - **Web Dashboard (React/Next.js) - localhost:8082**
   - Separate web app for analytics and advanced management.
   - Connects to same local API server.
   - Real-time updates via WebSocket or polling.
-- **MongoDB local instance**
-  - Store vocab items, review schedule, and cached dictionary definitions.
+- **MongoDB Atlas cluster**
+  - Store vocab items, review schedule, and cached dictionary definitions in cloud database.
 - **External APIs**
-  - Free Dictionary API (https://dictionaryapi.dev) for definitions and pronunciation.
+  - WordsAPI via RapidAPI for definitions and pronunciation metadata.
+
+### 7.4 Current MongoDB Atlas Configuration
+- User: `goodmotorvn_db_user`
+- Password: `MHlo3ODgZlT2Tnuu`
+- URI: `mongodb+srv://goodmotorvn_db_user:MHlo3ODgZlT2Tnuu@cluster0.iepimik.mongodb.net/learn_english?appName=Cluster0`
 
 ### 7.2 Data Flow
 
@@ -143,7 +148,7 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 - **React UI** allows richer library and review experiences.
 - **Separate Dashboard** provides better analytics without bloating extension size.
 - **Caching dictionary API** reduces network calls and enables offline lookup for previously searched words.
-- **Free Dictionary API** provides definitions, phonetics, and audio URLs at no cost.
+- **WordsAPI via RapidAPI** provides broad lexical data (definitions, examples, synonyms, pronunciation text).
 
 ## 8. Data Model (MongoDB)
 ### 8.1 `vocab_items`
@@ -183,7 +188,6 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 ### 8.3 `settings`
 - `dailyReviewLimit`: number
 - `defaultIntervals`: array of numbers
-- `dictionaryApiUrl`: string
 - `enableAudio`: boolean
 - `keyboardShortcuts`: object
 
@@ -199,7 +203,7 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 - Export/import data.
 
 ### 9.2 Non-Functional
-- All data stored locally in MongoDB.
+- All data stored in MongoDB Atlas.
 - Extension runs offline (if local API is running) with cached definitions.
 - **Fast inline lookup**: <200ms for cached words, <1s for new API calls.
 - **Fast response**: <300ms for list queries under 5k items.
@@ -221,8 +225,8 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 ## 11. Risks & Mitigations
 - **Risk**: Local API not running.
   - **Mitigation**: Show status indicator in extension popup and quick start instructions.
-- **Risk**: MongoDB not installed.
-  - **Mitigation**: Provide setup guide and fallback to IndexedDB in extension if needed.
+- **Risk**: MongoDB Atlas unreachable (network, IP allowlist, credentials).
+  - **Mitigation**: Validate Atlas connection string, allowlist client IP, and rely on cached definitions/manual fallback.
 - **Risk**: Dictionary API rate limits or downtime.
   - **Mitigation**: Aggressive caching in MongoDB, graceful fallback to manual entry.
 - **Risk**: Port 8082 already in use.
@@ -233,7 +237,7 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 ## 12. Milestones
 
 ### Phase 1: MVP (Core Lookup & Capture)
-1. **Local API + MongoDB setup**: Basic REST endpoints for vocab CRUD on localhost:8083.
+1. **Local API + MongoDB Atlas setup**: Basic REST endpoints for vocab CRUD on localhost:8083 with Atlas connection.
 2. **Click-to-Define**: Highlight text → icon appears → click icon → tooltip with dictionary API integration.
 3. **Audio pronunciation**: Play audio from dictionary API.
 4. **Manual capture**: Context menu + popup quick-add.
@@ -260,4 +264,3 @@ A personal-use Chrome extension that helps me learn English while browsing. It c
 - **Cache expiration**: Should dictionary cache expire after 30/60/90 days?
 - **Fallback storage**: Should we use IndexedDB in extension if MongoDB is down?
 - **Mobile sync**: Future consideration for syncing to mobile device?
-

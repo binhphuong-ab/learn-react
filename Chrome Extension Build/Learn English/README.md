@@ -1,6 +1,6 @@
 # Learn English
 
-Local-first English learning suite with:
+English learning suite with:
 - Chrome Extension (Manifest V3)
 - Local API server (Node.js + Express + MongoDB)
 - Local dashboard (React + Vite)
@@ -27,12 +27,17 @@ Local-first English learning suite with:
 - API: Express, Mongoose, Socket.IO
 - Dashboard: React, Vite, Recharts, Socket.IO client
 - Extension: MV3 background service worker + content script + popup + options
-- DB: MongoDB local
+- DB: MongoDB Atlas (cloud)
 
 ## Prerequisites
 - Node.js 18+
-- MongoDB running at `mongodb://127.0.0.1:27017`
+- MongoDB Atlas cluster access
 - Google Chrome
+
+## MongoDB Atlas Connection (Current)
+- User: `goodmotorvn_db_user`
+- Password: `MHlo3ODgZlT2Tnuu`
+- URI: `mongodb+srv://goodmotorvn_db_user:MHlo3ODgZlT2Tnuu@cluster0.iepimik.mongodb.net/learn_english?appName=Cluster0`
 
 ## Setup
 ```bash
@@ -56,11 +61,25 @@ npm run dev:dashboard
 3. Click `Load unpacked`
 4. Select folder: `.../Learn English/extension`
 
+## Safari Extension (Web Extension)
+This project now includes cross-browser runtime shims in `extension/runtime.js` and a Safari conversion script.
+
+Generate Safari host app + extension project:
+```bash
+npm run safari:convert
+```
+
+Notes:
+- Requires full Xcode (Command Line Tools alone are not enough).
+- Generated project will be placed under `safari/`.
+- After generation, open in Xcode, configure signing team, run host app once, then enable extension in Safari settings.
+
 ## Root Scripts
 - `npm run dev:api`
 - `npm run dev:dashboard`
 - `npm run start:api`
 - `npm run build`
+- `npm run safari:convert`
 
 ## API Endpoints
 - `GET /health`
@@ -84,10 +103,14 @@ See `api/.env.example`:
 - `PORT`
 - `MONGODB_URI`
 - `DASHBOARD_ORIGIN`
-- `DICTIONARY_API_URL`
+- `RAPIDAPI_HOST`
+- `RAPIDAPI_KEY`
+- `WORDS_API_BASE_URL`
 - `CACHE_TTL_DAYS`
+
+Current `MONGODB_URI` in this project:
+`mongodb+srv://goodmotorvn_db_user:MHlo3ODgZlT2Tnuu@cluster0.iepimik.mongodb.net/learn_english?appName=Cluster0`
 
 ## Technical Handbook
 Full technical documentation for future development/debugging:
 - `system-detail.md`
-

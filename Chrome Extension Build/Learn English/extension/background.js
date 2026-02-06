@@ -1,3 +1,9 @@
+try {
+  importScripts("runtime.js");
+} catch (error) {
+  // runtime shim is optional when native chrome API is available
+}
+
 const DEFAULT_API_BASE = "http://localhost:8083";
 
 async function getApiBase() {
@@ -55,7 +61,11 @@ async function saveSelection(selectionText, tab) {
     pronunciation: lookup?.phonetic || "",
     audioUrl: lookup?.audioUrl || "",
     meaning: lookup?.shortDefinition || "",
-    examples: lookup?.example ? [lookup.example] : []
+    examples: lookup?.example
+      ? [lookup.example]
+      : Array.isArray(lookup?.examples) && lookup.examples[0]
+        ? [lookup.examples[0]]
+        : []
   };
 
   const saved = await apiRequest("/api/vocab", {
@@ -93,12 +103,18 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 
   try {
-    const [{ result }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => window.getSelection()?.toString() || ""
-    });
+    let selected = "";
+    if (chrome.scripting?.executeScript) {
+      const [{ result }] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => window.getSelection()?.toString() || ""
+      });
+      selected = String(result || "").trim();
+    } else {
+      const selectionResponse = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" });
+      selected = String(selectionResponse?.text || "").trim();
+    }
 
-    const selected = String(result || "").trim();
     if (!selected) {
       return;
     }

@@ -28,8 +28,8 @@ flowchart LR
   A["Chrome Page"] --> B["Extension Content Script"]
   B --> C["Extension Background Service Worker"]
   C --> D["API Server :8083"]
-  D --> E["MongoDB"]
-  D --> F["dictionaryapi.dev"]
+  D --> E["MongoDB Atlas Cluster0"]
+  D --> F["RapidAPI WordsAPI"]
   D --> G["Socket.IO"]
   H["Dashboard :8082"] --> D
   H --> G
@@ -38,7 +38,7 @@ flowchart LR
 Ports:
 - API: `8083`
 - Dashboard: `8082`
-- MongoDB: `27017`
+- MongoDB: Atlas over TLS (`mongodb+srv`, no local `27017` required)
 
 ## 4. Components
 
@@ -62,6 +62,7 @@ Responsibilities:
 ### 4.2 Extension
 Key files:
 - `extension/manifest.json`
+- `extension/runtime.js` (cross-browser shim for Chrome/Safari WebExtension APIs)
 - `extension/background.js`
 - `extension/content.js`
 - `extension/popup.*`
@@ -73,6 +74,7 @@ Responsibilities:
 - Save operations
 - Settings and lightweight library management
 - Bridge API calls through background script
+- Maintain Chrome/Safari API compatibility through runtime shim
 
 ### 4.3 Dashboard
 Key files:
@@ -93,10 +95,17 @@ File: `api/.env`
 
 Variables:
 - `PORT` default `8083`
-- `MONGODB_URI` default `mongodb://127.0.0.1:27017/learn_english`
+- `MONGODB_URI` default `mongodb+srv://goodmotorvn_db_user:MHlo3ODgZlT2Tnuu@cluster0.iepimik.mongodb.net/learn_english?appName=Cluster0`
 - `DASHBOARD_ORIGIN` default `http://localhost:8082`
-- `DICTIONARY_API_URL` default `https://api.dictionaryapi.dev/api/v2/entries/en`
+- `RAPIDAPI_HOST` default `wordsapiv1.p.rapidapi.com`
+- `RAPIDAPI_KEY` required
+- `WORDS_API_BASE_URL` default `https://wordsapiv1.p.rapidapi.com`
 - `CACHE_TTL_DAYS` default `90`
+
+Atlas credentials used in this project:
+- User: `goodmotorvn_db_user`
+- Password: `MHlo3ODgZlT2Tnuu`
+- URI: `mongodb+srv://goodmotorvn_db_user:MHlo3ODgZlT2Tnuu@cluster0.iepimik.mongodb.net/learn_english?appName=Cluster0`
 
 Extension API base:
 - Default `http://localhost:8083`
@@ -155,7 +164,6 @@ Model: `api/src/models/Setting.js`
 Single logical row with `key = "default"`:
 - `dailyReviewLimit`
 - `defaultIntervals`
-- `dictionaryApiUrl`
 - `enableAudio`
 - `keyboardShortcuts.quickSave`
 
@@ -172,12 +180,15 @@ All API routes are in `api/src/routes` and mounted under `/api` except `/health`
 - Response includes:
   - `cached`
   - `term`
+  - `matchedTerm` (when API resolves via base form fallback, e.g. `contributed -> contribute`)
   - `raw`
   - `phonetic`
   - `audioUrl`
   - `meanings[]`
   - `shortDefinition`
   - `example`
+  - `examples[]`
+  - `synonyms[]`
 
 Behavior:
 - read cache first
@@ -374,6 +385,11 @@ Build dashboard:
 npm run build -w dashboard
 ```
 
+Generate Safari extension project (requires full Xcode):
+```bash
+npm run safari:convert
+```
+
 Health checks:
 ```bash
 curl http://localhost:8083/health
@@ -386,7 +402,8 @@ curl "http://localhost:8083/api/vocab?limit=5"
 ### 14.1 API not reachable
 Checks:
 - `curl http://localhost:8083/health`
-- verify MongoDB is running
+- verify Atlas URI/credentials are correct in `api/.env`
+- verify current network/IP is allowed by Atlas
 - inspect API console output
 
 ### 14.2 Dashboard not updating after save
@@ -420,6 +437,7 @@ Checks:
 - Import currently inserts rows directly; dedupe is not applied there.
 - Large dashboard bundle warning from Vite can be improved with code splitting.
 - No authentication because system is designed for local single-user usage.
+- No API auth layer; DB access control relies on MongoDB Atlas credentials.
 
 ## 16. Suggested Engineering Conventions
 When modifying behavior:
@@ -428,4 +446,3 @@ When modifying behavior:
 3. Emit `vocab:changed` for every write path.
 4. Update both dashboard and extension views when schema fields change.
 5. Update `README.md` and this file together for any architecture or API contract change.
-

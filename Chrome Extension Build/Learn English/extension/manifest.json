@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Learn English Local",
-  "description": "Highlight words, lookup definitions, and save vocabulary to local MongoDB.",
+  "description": "Highlight words, lookup definitions, and save vocabulary through local API + MongoDB Atlas.",
   "version": "1.0.0",
   "permissions": [
     "activeTab",
@@ -15,12 +15,25 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "action": {
     "default_title": "Learn English",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png",
+    "256": "icons/icon-256.png",
+    "512": "icons/icon-512.png"
   },
   "options_page": "options.html",
   "commands": {
@@ -35,7 +48,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["runtime.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     }

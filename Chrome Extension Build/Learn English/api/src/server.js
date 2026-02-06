@@ -17,7 +17,9 @@ async function main() {
   });
 
   const dictionaryService = createDictionaryService({
-    dictionaryApiUrl: config.dictionaryApiUrl,
+    rapidApiHost: config.rapidApiHost,
+    rapidApiKey: config.rapidApiKey,
+    wordsApiBaseUrl: config.wordsApiBaseUrl,
     cacheTtlDays: config.cacheTtlDays
   });
 

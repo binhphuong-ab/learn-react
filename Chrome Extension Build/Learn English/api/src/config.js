@@ -11,6 +11,8 @@ export const config = {
   port: toNumber(process.env.PORT, 8083),
   mongoUri: process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/learn_english",
   dashboardOrigin: process.env.DASHBOARD_ORIGIN || "http://localhost:8082",
-  dictionaryApiUrl: process.env.DICTIONARY_API_URL || "https://api.dictionaryapi.dev/api/v2/entries/en",
+  rapidApiHost: process.env.RAPIDAPI_HOST || "wordsapiv1.p.rapidapi.com",
+  rapidApiKey: process.env.RAPIDAPI_KEY || "",
+  wordsApiBaseUrl: process.env.WORDS_API_BASE_URL || "https://wordsapiv1.p.rapidapi.com",
   cacheTtlDays: toNumber(process.env.CACHE_TTL_DAYS, 90)
 };
