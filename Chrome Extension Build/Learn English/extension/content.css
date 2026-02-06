@@ -1,0 +1,94 @@
+#learn-english-floating-icon {
+  position: fixed;
+  z-index: 2147483646;
+  border: 0;
+  border-radius: 999px;
+  width: 26px;
+  height: 26px;
+  background: #0b4f3b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+}
+
+#learn-english-tooltip {
+  position: fixed;
+  z-index: 2147483647;
+  width: 300px;
+  background: #f8f7f2;
+  border: 1px solid #2c2a21;
+  border-radius: 10px;
+  color: #17150f;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  font-family: Georgia, "Times New Roman", serif;
+  overflow: hidden;
+}
+
+#learn-english-tooltip .le-header {
+  background: linear-gradient(135deg, #0b4f3b, #167f61);
+  color: #fff;
+  padding: 10px 12px;
+}
+
+#learn-english-tooltip .le-term {
+  margin: 0;
+  font-size: 18px;
+}
+
+#learn-english-tooltip .le-phonetic {
+  margin: 4px 0 0;
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+#learn-english-tooltip .le-body {
+  padding: 12px;
+}
+
+#learn-english-tooltip .le-definition {
+  margin: 0 0 10px;
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+#learn-english-tooltip .le-example {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #39362b;
+}
+
+#learn-english-tooltip .le-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#learn-english-tooltip button {
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#learn-english-tooltip .le-audio {
+  background: #283618;
+  color: #fff;
+}
+
+#learn-english-tooltip .le-save {
+  background: #0b4f3b;
+  color: #fff;
+}
+
+#learn-english-tooltip .le-manual {
+  background: #d8d2bc;
+  color: #1f1b10;
+}
+
+#learn-english-tooltip .le-status {
+  font-size: 12px;
+  margin-top: 8px;
+  min-height: 14px;
+}

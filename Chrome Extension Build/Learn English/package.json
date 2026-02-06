@@ -1,0 +1,16 @@
+{
+  "name": "learn-english-suite",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "api",
+    "dashboard"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:api": "npm run dev -w api",
+    "dev:dashboard": "npm run dev -w dashboard",
+    "build": "npm run build -w dashboard",
+    "start:api": "npm run start -w api"
+  }
+}

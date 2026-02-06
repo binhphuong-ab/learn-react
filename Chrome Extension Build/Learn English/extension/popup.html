@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Learn English</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header>
+        <h1>Learn English</h1>
+        <p id="health">Checking API...</p>
+      </header>
+
+      <section>
+        <h2>Quick Add</h2>
+        <form id="quick-add-form">
+          <input id="term" name="term" placeholder="Word or phrase" required />
+          <input id="meaning" name="meaning" placeholder="Meaning" />
+          <input id="tags" name="tags" placeholder="Tags (comma separated)" />
+          <textarea id="example" name="example" placeholder="Example sentence"></textarea>
+          <button type="submit">Save</button>
+        </form>
+        <p id="quick-add-status" class="status"></p>
+      </section>
+
+      <section>
+        <h2>Review</h2>
+        <p id="due-count">Due words: ...</p>
+      </section>
+
+      <section>
+        <h2>Recent</h2>
+        <input id="search" placeholder="Search" />
+        <ul id="recent-list"></ul>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
