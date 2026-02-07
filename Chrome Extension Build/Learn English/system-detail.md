@@ -100,6 +100,10 @@ Variables:
 - `RAPIDAPI_HOST` default `wordsapiv1.p.rapidapi.com`
 - `RAPIDAPI_KEY` required
 - `WORDS_API_BASE_URL` default `https://wordsapiv1.p.rapidapi.com`
+- `MERRIAM_DICTIONARY_KEY` optional (required only when provider is `merriam`)
+- `MERRIAM_THESAURUS_KEY` optional (reserved for future synonym/thesaurus use)
+- `MERRIAM_DICTIONARY_BASE_URL` default `https://www.dictionaryapi.com/api/v3/references/collegiate/json`
+- `MERRIAM_AUDIO_BASE_URL` default `https://media.merriam-webster.com/audio/prons/en/us/mp3`
 - `CACHE_TTL_DAYS` default `90`
 
 Atlas credentials used in this project:
@@ -151,6 +155,7 @@ Model: `api/src/models/DictionaryCache.js`
 
 Fields:
 - `term` unique lowercase key
+- `provider` dictionary source key (`wordsapi|merriam`)
 - `definition` raw dictionary payload
 - `phonetic`
 - `audioUrl`
@@ -162,6 +167,7 @@ Fields:
 Model: `api/src/models/Setting.js`
 
 Single logical row with `key = "default"`:
+- `dictionaryProvider` (`wordsapi|merriam`)
 - `dailyReviewLimit`
 - `defaultIntervals`
 - `enableAudio`
@@ -177,8 +183,10 @@ All API routes are in `api/src/routes` and mounted under `/api` except `/health`
 
 ### 7.2 Dictionary Lookup
 - `GET /api/lookup?term=WORD`
+- optional override: `GET /api/lookup?term=WORD&provider=wordsapi|merriam`
 - Response includes:
   - `cached`
+  - `provider`
   - `term`
   - `matchedTerm` (when API resolves via base form fallback, e.g. `contributed -> contribute`)
   - `raw`
@@ -191,6 +199,9 @@ All API routes are in `api/src/routes` and mounted under `/api` except `/health`
   - `synonyms[]`
 
 Behavior:
+- provider source:
+  - default from settings `dictionaryProvider`
+  - optional per-request override via `provider` query
 - read cache first
 - if cache expired/missing, call external API and upsert cache
 - if external fails but cache exists, return stale cache
@@ -323,6 +334,7 @@ Key components:
 Data loading:
 - REST via axios instance (`dashboard/src/lib/api.js`)
 - WebSocket invalidation on `vocab:changed`
+- Dashboard header includes dictionary provider switch and persists through `PUT /api/settings`
 
 Library display behavior:
 - shows source title/link

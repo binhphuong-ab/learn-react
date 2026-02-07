@@ -35,6 +35,8 @@ export default function App() {
   const [timeline, setTimeline] = useState([]);
   const [library, setLibrary] = useState([]);
   const [dueItems, setDueItems] = useState([]);
+  const [dictionaryProvider, setDictionaryProvider] = useState("wordsapi");
+  const [providerSaving, setProviderSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -80,12 +82,17 @@ export default function App() {
     setDueItems(data.items || []);
   }
 
+  async function loadSettings() {
+    const { data } = await api.get("/api/settings");
+    setDictionaryProvider(data?.dictionaryProvider || "wordsapi");
+  }
+
   async function reloadAll() {
     setLoading(true);
     setError("");
 
     try {
-      await Promise.all([loadStats(), loadTimeline(), loadLibrary(), loadDue()]);
+      await Promise.all([loadStats(), loadTimeline(), loadLibrary(), loadDue(), loadSettings()]);
     } catch (err) {
       setError(err?.response?.data?.error || err.message || "Failed to load dashboard");
     } finally {
@@ -149,6 +156,40 @@ export default function App() {
     await reloadAll();
   }
 
+  async function handleProviderChange(nextProvider) {
+    const normalizedProvider = String(nextProvider || "").trim();
+    if (providerSaving || normalizedProvider === dictionaryProvider) {
+      return;
+    }
+
+    const allowed = new Set(["wordsapi", "merriam"]);
+    if (!allowed.has(normalizedProvider)) {
+      return;
+    }
+
+    if (!normalizedProvider) {
+      return;
+    }
+
+    setProviderSaving(true);
+    setError("");
+    setDictionaryProvider(normalizedProvider);
+
+    try {
+      const { data } = await api.put("/api/settings", { dictionaryProvider: normalizedProvider });
+      setDictionaryProvider(data?.dictionaryProvider || normalizedProvider);
+    } catch (err) {
+      setError(err?.response?.data?.error || err.message || "Failed to update dictionary provider");
+      try {
+        await loadSettings();
+      } catch {
+        // keep optimistic selection if settings reload fails
+      }
+    } finally {
+      setProviderSaving(false);
+    }
+  }
+
   async function handleImport(event) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -190,6 +231,31 @@ export default function App() {
         </div>
 
         <div className="top-actions">
+          <label className="provider-select">
+            <span>Dictionary</span>
+            <div className="provider-toggle" role="radiogroup" aria-label="Dictionary provider">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={dictionaryProvider === "wordsapi"}
+                className={dictionaryProvider === "wordsapi" ? "active" : ""}
+                onClick={() => handleProviderChange("wordsapi")}
+                disabled={providerSaving}
+              >
+                WordsAPI
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={dictionaryProvider === "merriam"}
+                className={dictionaryProvider === "merriam" ? "active" : ""}
+                onClick={() => handleProviderChange("merriam")}
+                disabled={providerSaving}
+              >
+                Merriam
+              </button>
+            </div>
+          </label>
           <a href={exportLinks.json} target="_blank" rel="noreferrer">
             Export JSON
           </a>

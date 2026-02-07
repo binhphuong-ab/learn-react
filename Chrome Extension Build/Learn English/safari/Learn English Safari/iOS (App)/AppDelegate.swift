@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  iOS (App)
 //
-//  Created by Ho Thi Ngoc Le on 6/2/26.
+//  Created by Ho Thi Ngoc Le on 7/2/26.
 //
 
 import UIKit

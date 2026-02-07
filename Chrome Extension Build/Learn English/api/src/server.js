@@ -20,6 +20,9 @@ async function main() {
     rapidApiHost: config.rapidApiHost,
     rapidApiKey: config.rapidApiKey,
     wordsApiBaseUrl: config.wordsApiBaseUrl,
+    merriamDictionaryApiKey: config.merriamDictionaryApiKey,
+    merriamDictionaryBaseUrl: config.merriamDictionaryBaseUrl,
+    merriamAudioBaseUrl: config.merriamAudioBaseUrl,
     cacheTtlDays: config.cacheTtlDays,
     lookupTimeoutMs: config.lookupTimeoutMs,
     missCacheTtlMinutes: config.missCacheTtlMinutes

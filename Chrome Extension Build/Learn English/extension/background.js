@@ -1,9 +1,12 @@
 try {
-  importScripts("runtime.js");
+  if (typeof importScripts === "function") {
+    importScripts("runtime.js");
+  }
 } catch (error) {
   // runtime shim is optional when native chrome API is available
 }
 
+const ext = globalThis.LE_BROWSER || globalThis.chrome || globalThis.browser || null;
 const DEFAULT_API_BASE = "http://localhost:8083";
 
 function sanitizeLookupTerm(value) {
@@ -14,8 +17,11 @@ function sanitizeLookupTerm(value) {
 }
 
 async function getApiBase() {
-  const stored = await chrome.storage.local.get(["apiBase"]);
-  return stored.apiBase || DEFAULT_API_BASE;
+  if (!ext?.storage?.local?.get) {
+    return DEFAULT_API_BASE;
+  }
+  const stored = await ext.storage.local.get(["apiBase"]);
+  return stored?.apiBase || DEFAULT_API_BASE;
 }
 
 async function apiRequest(path, options = {}) {
@@ -40,7 +46,10 @@ async function apiRequest(path, options = {}) {
 }
 
 function createContextMenu() {
-  chrome.contextMenus.create({
+  if (!ext?.contextMenus?.create) {
+    return;
+  }
+  ext.contextMenus.create({
     id: "learn-english-save-selection",
     title: "Save to Learn English",
     contexts: ["selection"]
@@ -83,11 +92,11 @@ async function saveSelection(selectionText, tab) {
   return { ok: true, item: saved };
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+ext?.runtime?.onInstalled?.addListener?.(() => {
   createContextMenu();
 });
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+ext?.contextMenus?.onClicked?.addListener?.(async (info, tab) => {
   if (info.menuItemId !== "learn-english-save-selection") {
     return;
   }
@@ -99,26 +108,30 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-chrome.commands.onCommand.addListener(async (command) => {
+ext?.commands?.onCommand?.addListener?.(async (command) => {
   if (command !== "quick-save-selection") {
     return;
   }
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!ext?.tabs?.query) {
+    return;
+  }
+
+  const [tab] = await ext.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
     return;
   }
 
   try {
     let selected = "";
-    if (chrome.scripting?.executeScript) {
-      const [{ result }] = await chrome.scripting.executeScript({
+    if (ext?.scripting?.executeScript) {
+      const [{ result }] = await ext.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => window.getSelection()?.toString() || ""
       });
       selected = String(result || "").trim();
     } else {
-      const selectionResponse = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" });
+      const selectionResponse = await ext.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" });
       selected = String(selectionResponse?.text || "").trim();
     }
 
@@ -132,7 +145,7 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+ext?.runtime?.onMessage?.addListener?.((message, sender, sendResponse) => {
   (async () => {
     switch (message?.type) {
       case "LOOKUP_TERM": {
@@ -202,7 +215,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           body: JSON.stringify(message.payload || {})
         });
         if (message.payload?.apiBase) {
-          await chrome.storage.local.set({ apiBase: message.payload.apiBase });
+          await ext?.storage?.local?.set?.({ apiBase: message.payload.apiBase });
         }
         sendResponse({ ok: true, data: result });
         break;

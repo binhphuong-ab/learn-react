@@ -14,6 +14,7 @@ English learning suite with:
 - Auto-capture source context: `sourceTitle` and `sourceUrl`.
 - Review due words with spaced repetition.
 - Track progress in dashboard with timeline, stats, and charts.
+- Switch dictionary provider in dashboard (`WordsAPI` or `Merriam-Webster`).
 - Export/import JSON or CSV.
 
 ## Important Current Behavior
@@ -106,6 +107,10 @@ See `api/.env.example`:
 - `RAPIDAPI_HOST`
 - `RAPIDAPI_KEY`
 - `WORDS_API_BASE_URL`
+- `MERRIAM_DICTIONARY_KEY`
+- `MERRIAM_THESAURUS_KEY`
+- `MERRIAM_DICTIONARY_BASE_URL`
+- `MERRIAM_AUDIO_BASE_URL`
 - `CACHE_TTL_DAYS`
 
 Current `MONGODB_URI` in this project:
