@@ -1,0 +1,10 @@
+
+> kaizen-note@0.1.0 start
+> next start --port 8084
+
+▲ Next.js 16.1.6
+- Local:         http://localhost:8084
+- Network:       http://172.23.211.67:8084
+
+✓ Starting...
+✓ Ready in 297ms
