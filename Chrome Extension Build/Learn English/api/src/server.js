@@ -20,7 +20,9 @@ async function main() {
     rapidApiHost: config.rapidApiHost,
     rapidApiKey: config.rapidApiKey,
     wordsApiBaseUrl: config.wordsApiBaseUrl,
-    cacheTtlDays: config.cacheTtlDays
+    cacheTtlDays: config.cacheTtlDays,
+    lookupTimeoutMs: config.lookupTimeoutMs,
+    missCacheTtlMinutes: config.missCacheTtlMinutes
   });
 
   const app = createApp({

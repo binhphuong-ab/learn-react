@@ -6,6 +6,13 @@ try {
 
 const DEFAULT_API_BASE = "http://localhost:8083";
 
+function sanitizeLookupTerm(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
+}
+
 async function getApiBase() {
   const stored = await chrome.storage.local.get(["apiBase"]);
   return stored.apiBase || DEFAULT_API_BASE;
@@ -41,7 +48,7 @@ function createContextMenu() {
 }
 
 async function saveSelection(selectionText, tab) {
-  const term = String(selectionText || "").trim();
+  const term = sanitizeLookupTerm(selectionText);
   if (!term) {
     return { ok: false, error: "No selected text" };
   }
@@ -129,7 +136,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     switch (message?.type) {
       case "LOOKUP_TERM": {
-        const result = await apiRequest(`/api/lookup?term=${encodeURIComponent(message.term)}`);
+        const term = sanitizeLookupTerm(message.term);
+        if (!term) {
+          throw new Error("No valid term selected");
+        }
+        const result = await apiRequest(`/api/lookup?term=${encodeURIComponent(term)}`);
         sendResponse({ ok: true, data: result });
         break;
       }

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { DictionaryCache } from "../models/DictionaryCache.js";
-import { normalizeTerm } from "../utils/normalize.js";
+import { normalizeLookupTerm, normalizeTerm } from "../utils/normalize.js";
 import { createError } from "../utils/httpError.js";
 
 function uniqueStrings(values = []) {
@@ -134,7 +134,14 @@ function cacheExpired(cacheDoc) {
   return new Date(cacheDoc.expiresAt).getTime() < Date.now();
 }
 
-export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBaseUrl, cacheTtlDays }) {
+export function createDictionaryService({
+  rapidApiHost,
+  rapidApiKey,
+  wordsApiBaseUrl,
+  cacheTtlDays,
+  lookupTimeoutMs,
+  missCacheTtlMinutes
+}) {
   const wordsApiHeaders = {
     "x-rapidapi-host": rapidApiHost,
     "x-rapidapi-key": rapidApiKey
@@ -142,7 +149,7 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
 
   async function fetchWordsApiWord(word) {
     const response = await axios.get(`${wordsApiBaseUrl}/words/${encodeURIComponent(word)}`, {
-      timeout: 8000,
+      timeout: lookupTimeoutMs,
       headers: wordsApiHeaders
     });
     return response.data;
@@ -154,13 +161,20 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
         throw createError(500, "RAPIDAPI_KEY is required");
       }
 
-      const normalized = normalizeTerm(term);
+      const normalized = normalizeLookupTerm(term);
       if (!normalized) {
         throw createError(400, "term is required");
       }
 
+      const positiveTtlMs = cacheTtlDays * 24 * 60 * 60 * 1000;
+      const missTtlMs = Math.max(60 * 1000, missCacheTtlMinutes * 60 * 1000);
+
       const cached = await DictionaryCache.findOne({ term: normalized }).lean();
       if (cached && !cacheExpired(cached)) {
+        if (cached.notFound) {
+          throw createError(404, "No dictionary entry found");
+        }
+
         const parsed = parsePayload(cached.definition);
         if (parsed.shortDefinition || parsed.meanings?.length || parsed.example || parsed.synonyms?.length) {
           const matchedTerm = parsed?.raw?.word && parsed.raw.word !== normalized ? parsed.raw.word : "";
@@ -181,7 +195,8 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
         payload = await fetchWordsApiWord(normalized);
         parsed = parseWordsApiPayload(payload);
 
-        if (!parsed.meanings.length) {
+        const isSingleToken = !normalized.includes(" ");
+        if (!parsed.meanings.length && isSingleToken) {
           for (const candidate of collectWordsApiCandidates(normalized)) {
             try {
               const candidatePayload = await fetchWordsApiWord(candidate);
@@ -215,6 +230,20 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
 
         const status = error?.response?.status;
         if (status === 404) {
+          const missExpiresAt = new Date(Date.now() + missTtlMs);
+          await DictionaryCache.findOneAndUpdate(
+            { term: normalized },
+            {
+              term: normalized,
+              definition: { word: normalized, results: [] },
+              phonetic: "",
+              audioUrl: "",
+              notFound: true,
+              cachedAt: new Date(),
+              expiresAt: missExpiresAt
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
           throw createError(404, "No dictionary entry found");
         }
         throw createError(502, "Dictionary API unavailable");
@@ -224,8 +253,7 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
         matchedTerm = parsed.raw.word;
       }
 
-      const ttlMs = cacheTtlDays * 24 * 60 * 60 * 1000;
-      const expiresAt = new Date(Date.now() + ttlMs);
+      const expiresAt = new Date(Date.now() + positiveTtlMs);
 
       await DictionaryCache.findOneAndUpdate(
         { term: normalized },
@@ -234,6 +262,7 @@ export function createDictionaryService({ rapidApiHost, rapidApiKey, wordsApiBas
           definition: payload,
           phonetic: parsed.phonetic,
           audioUrl: parsed.audioUrl,
+          notFound: false,
           cachedAt: new Date(),
           expiresAt
         },

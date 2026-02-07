@@ -6,6 +6,7 @@ const dictionaryCacheSchema = new mongoose.Schema(
     definition: { type: mongoose.Schema.Types.Mixed, required: true },
     phonetic: { type: String, default: "" },
     audioUrl: { type: String, default: "" },
+    notFound: { type: Boolean, default: false },
     cachedAt: { type: Date, default: () => new Date() },
     expiresAt: { type: Date, default: null, index: true }
   },

@@ -14,5 +14,7 @@ export const config = {
   rapidApiHost: process.env.RAPIDAPI_HOST || "wordsapiv1.p.rapidapi.com",
   rapidApiKey: process.env.RAPIDAPI_KEY || "",
   wordsApiBaseUrl: process.env.WORDS_API_BASE_URL || "https://wordsapiv1.p.rapidapi.com",
-  cacheTtlDays: toNumber(process.env.CACHE_TTL_DAYS, 90)
+  cacheTtlDays: toNumber(process.env.CACHE_TTL_DAYS, 90),
+  lookupTimeoutMs: toNumber(process.env.LOOKUP_TIMEOUT_MS, 4500),
+  missCacheTtlMinutes: toNumber(process.env.MISS_CACHE_TTL_MINUTES, 360)
 };

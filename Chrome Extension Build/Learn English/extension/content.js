@@ -203,13 +203,21 @@ function buildContext(range, term) {
   return text.slice(start, end);
 }
 
+function sanitizeSelectedTerm(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
+}
+
 function getSelectionInfo() {
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
     return null;
   }
 
-  const text = selection.toString().trim();
+  const rawText = selection.toString();
+  const text = sanitizeSelectedTerm(rawText);
   if (!text || text.length > 80) {
     return null;
   }
@@ -223,7 +231,7 @@ function getSelectionInfo() {
   return {
     term: text,
     rect,
-    context: buildContext(range, text),
+    context: buildContext(range, rawText.trim() || text),
     sourceUrl: window.location.href,
     sourceTitle: document.title
   };
